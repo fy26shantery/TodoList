@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>ToDo List</title>
+<link href="@{/css/style.css}" rel="stylesheet" type="text/css">
+</head>
+<body>
+	<table border="1">
+		<tr>
+			<th th:text="#{html.head_Id}"></th>
+			<th th:text="#{html.head_title}"></th>
+			<th th:text="#{html.head_importance}"></th>
+			<th th:text="#{html.head_urgency}"></th>
+			<th th:text="#{html.head_deadline}"></th>
+			<th th:text="#{html.head_finish}"></th>
+		</tr>
+		<tr th:each="todo${todoList}">
+			<td th:text="${todo.id}"></td>
+			<td th:text="${todo.title}"></td>
+			<td th:text="${todo.importance == 1 ? '★★★':'★'}"></td>
+			<td th:text="${todo.urgency == 1 ? '★★★':'★'}"></td>
+			<td th:text="${todo.deadline}"></td>
+			<td th:text="${todo.done == 'Y' ? '完了':''}"></td>
+		</tr>
+	</table>
+
+</body>
+</html>
