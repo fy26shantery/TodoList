@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title>ToDo List</title>
+
+	<link th:href="@{/css/style.css}" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+	<a th:href="@{/todo/create}" th:text="#{todo.insert}"> </a>
+	<table>
+		<tr>
+			<th th:text="#{todo.id}"></th>
+			<th th:text="#{todo.title}"></th>
+			<th th:text="#{todo.importance}"></th>
+			<th th:text="#{todo.urgency}"></th>
+			<th th:text="#{todo.deadline}"></th>
+			<th th:text="#{todo.done}"></th>
+
+
+		</tr>
+		<tr th:each="todo:${todoList}">
+			<td th:text="${todo.id}"></td>
+			<td><a th:href="@{/todo/{id}(id=${todo.id})}" th:text="${todo.title}"></a></td>
+			<td th:text="${todo.importance==1?'★★★':'★'}"></td>
+			<td th:text="${todo.urgency==1?'★★★':'★'}"></td>
+			<td th:text="${todo.deadline}"></td>
+			<td th:text="${todo.done=='Y'?'完了':''}"></td>
+
+		</tr>
+	</table>
+
+</body>
+
+</html>

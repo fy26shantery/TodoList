@@ -1,0 +1,18 @@
+# Eclipse metadata
+.metadata
+.classpath
+.project
+.settings/
+
+target/
+
+# External folders
+.recommenders/
+
+# Compiled class files
+bin/
+build/
+*.class
+
+# Log files
+*.log
