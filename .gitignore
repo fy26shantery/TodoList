@@ -12,5 +12,7 @@ bin/
 build/
 *.class
 
+target/
+
 # Log files
 *.log
