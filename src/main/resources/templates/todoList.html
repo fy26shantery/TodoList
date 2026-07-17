@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>ToDo List</title>
+<link th:href="@{/css/style.css}" rel="stylesheet" type="text/css">
+</head>
+<body>
+	<form th:action="@{/}" method="post" th:object="${todoQuery}">
+		<div style="display: flex">
+			<table border="1">
+				<tr>
+					<th th:text=#{m.title}></th>
+					<th th:text=#{m.importance}></th>
+					<th th:text=#{m.urgency}></th>
+					<th th:text=#{m.deadline}></th>
+					<th th:text=#{m.done}></th>
+				</tr>
+				<tr>
+					<td>
+						<input type="text" name="title" size="40" th:value="*{title}">
+					</td>
+					<td>
+						<select name="importance">
+							<option value="-1" th:field="*{importance}" th:text=#{notchooes}></option>
+							<option value="1" th:field="*{importance}" th:text=#{high}></option>
+							<option value="0" th:field="*{importance}" th:text=#{low}></option>
+						</select>
+					</td>
+					<td>
+						<select name="urgency">
+							<option value="-1" th:field="*{urgency}" th:text=#{notchooes}></option>
+							<option value="1" th:field="*{urgency}" th:text=#{high}></option>
+							<option value="0" th:field="*{urgency}" th:text=#{low}></option>
+						</select>
+					</td>
+					<td>
+						<input type="text" name="deadlineFrom" th:value="*{deadlineFrom}" size="10" placeholder="yyyy-mm-dd">
+						～
+						<input type="text" name="deadlineTo" th:value="*{deadlineTo}" size="10" placeholder="yyyy-mm-dd">
+					</td>
+					<td>
+						<input type="checkbox" value="Y" th:field="*{done}" th:text=#{m.done}>
+					</td>
+				</tr>
+			</table>
+			<button type="submit" th:formaction="@{/todo/query}" th:text=#{serach}></button>
+		</div>
+		<div th:if="${#fields.hasErrors('deadlineFrom')}" th:errors="*{deadlineFrom}" th:errorclass="red"></div>
+		<div th:if="${#fields.hasErrors('deadlineTo')}" th:errors="*{deadlineTo}" th:errorclass="red"></div>
+		<hr>
+		<button type="submit"  th:formaction="@{/todo/create/form}" th:text=#{newregist}></button>
+	</form>
+	<table border="1">
+		<tr>
+			<th th:text=#{m.id}></th>
+			<th th:text=#{m.title}></th>
+			<th th:text=#{m.importance}></th>
+			<th th:text=#{m.urgency}></th>
+			<th th:text=#{m.deadline}></th>
+			<th th:text=#{m.done}></th>
+		</tr>
+		<tr th:each="todo:${todoList}">
+			<td th:text="${todo.id}"></td>
+			<td><a th:href="@{/todo/__${todo.id}__}" th:text="${todo.title}"></a></td>
+			<td th:text="${todo.importance == 1 ? '★★★':'★'}"></td>
+			<td th:text="${todo.urgency == 1 ? '★★★':'★'}"></td>
+			<td th:text="${todo.deadline}"></td>
+			<td th:text="${todo.done == 'Y' ? '完了':''}"></td>
+		</tr>
+	</table>
+
+</body>
+</html>
