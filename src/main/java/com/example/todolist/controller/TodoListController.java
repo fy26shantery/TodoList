@@ -134,17 +134,6 @@ public class TodoListController {
 	public String queryTodo(@ModelAttribute TodoQuery todoQuery, BindingResult result,
 			@PageableDefault(page = 0, size = 5) Pageable pageable, Model m) {
 
-		//		List<Todo> todoList = null;
-		//		if (todoService.isValid(todoQuery, result)) {
-		//			//エラーがなければ検索
-		//			//todoList = todoQueryService.query();
-		//			//↓
-		//			//JPQLによる検索
-		//			todoList = todoDaoImpl.findByJPQL(todoQuery);
-		//		}
-		//		m.addAttribute("todoList", todoList);
-		//		return "todoList";
-
 		Page<Todo> todoPage = null;
 		if (todoService.isValid(todoQuery, result)) {
 			//エラーがなければ検索
