@@ -9,61 +9,61 @@
 	<form th:action="@{/}" method="post" th:object="${todoData}">
 		<table>
 			<tr>
-				<th>id</th>
+				<th th:text="#{html.head_Id}"></th>
 				<td>
 					<span th:text="*{id}"></span>
 					<input type="hidden" th:field="*{id}">
 				</td>
 			</tr>
 			<tr>
-				<th>件名</th>
+				<th th:text="#{html.head_title}"></th>
 				<td>
 					<input type="text" name="title" size="40" th:value="*{title}">
 					<div th:if="${#fields.hasErrors('title')}" th:errors="*{title}" th:errorclass="red"></div>
 				</td>
 			</tr>
 			<tr>
-				<th>重要度</th>
+				<th th:text="#{html.head_importance}"></th>
 				<td>
-					<input type="radio" value="1" th:field="*{importance}">高
-					<input type="radio" value="0" th:field="*{importance}">低
+					<input type="radio" value="1" th:field="*{importance}" th:text="#{importance.high}">
+					<input type="radio" value="0" th:field="*{importance}" th:text="#{importance.low}">
 					<div th:if="${#fields.hasErrors('importance')}" th:errors="*{importance}" th:errorclass="red"></div>
 				</td>
 			</tr>
 			<tr>
-				<th>重要度</th>
+				<th th:text="#{html.head_urgency}"></th>
 				<td>
 					<select name="urgency">
-						<option value="-1" th:field="*{urgency}">選択してください</option>
-						<option value="1" th:field="*{urgency}">高</option>
-						<option value="0" th:field="*{urgency}">低</option>
+						<option value="-1" th:field="*{urgency}" th:text="#{urgency.require}"></option>
+						<option value="1" th:field="*{urgency}" th:text="#{urgency.high}"></option>
+						<option value="0" th:field="*{urgency}" th:text="#{urgency.low}"></option>
 					</select>
 					<div th:if="${#fields.hasErrors('urgency')}" th:errors="*{urgency}" th:errorclass="red"></div>
 				</td>
 			</tr>
 			<tr>
-				<th>期限</th>
+				<th th:text="#{html.head_deadline}"></th>
 				<td>
 					<input type="text" name="deadline" th:value="*{deadline}" th:placeholder="#{date.format}">
 					<div th:if="${#fields.hasErrors('deadline')}" th:errors="*{deadline}" th:errorclass="red"></div>
 				</td>
 			</tr>
 			<tr>
-				<th>チェック</th>
+				<th th:text="#{check}"></th>
 				<td>
-					<input type="checkbox" value="Y" th:field="*{done}">完了
+					<input type="checkbox" value="Y" th:field="*{done}" th:text="#{finished}">
 					<input type="hidden" name="!done" value="N"/>
 				</td>
 			</tr>
 		</table>
 		<div th:if="${session.mode == 'update'}">
-			<button type="submit" th:formaction="@{/todo/update}">更新</button>
-			<button type="submit" th:formaction="@{/todo/delete}">削除</button>
-			<button type="submit" th:formaction="@{/todo/cancel}">キャンセル</button>
+			<button type="submit" th:formaction="@{/todo/update}" th:text="#{update}"></button>
+			<button type="submit" th:formaction="@{/todo/delete}" th:text="#{delete}"></button>
+			<button type="submit" th:formaction="@{/todo/cancel}" th:text="#{cancel}"></button>
 		</div>
 		<div th:unless="${session.mode == 'update'}">
-			<button type="submit" th:formaction="@{/todo/create}">登録</button>
-			<button type="submit" th:formaction="@{/todo/cancel}">キャンセル</button>
+			<button type="submit" th:formaction="@{/todo/create}" th:text="#{regist}"></button>
+			<button type="submit" th:formaction="@{/todo/cancel}" th:text="#{cancel}"></button>
 		</div>
 	</form>
 

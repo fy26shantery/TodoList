@@ -1,12 +1,13 @@
 package com.example.todolist.controller;
 
-import java.util.List;
-
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.servlet.http.HttpSession;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -42,11 +43,14 @@ public class TodolistController {
 	}
 
 	@GetMapping("/todo")
-	public String showTodoList(Model md) {
+	public String showTodoList(Model md,
+			@PageableDefault(page = 0, size = 5, sort = "id") org.springframework.data.domain.Pageable pageable) {
 		//一覧を検索して表示する
-		List<Todo> todoList = todoRepository.findAll();
-		md.addAttribute("todoList", todoList);
+		Page<Todo> todoPage = todoRepository.findAll(pageable);
 		md.addAttribute("todoQuery", new TodoQuery());
+		md.addAttribute("todoPage", todoPage);
+		md.addAttribute("todoList", todoPage.getContent());
+		session.setAttribute("todoQuery", new TodoQuery());
 
 		return "todoList";
 	}
@@ -117,17 +121,42 @@ public class TodolistController {
 
 	@PostMapping("/todo/query")
 	public String queryTodo(@ModelAttribute TodoQuery todoQuery,
-			BindingResult result, Model md) {
+			BindingResult result,
+			@PageableDefault(page = 0, size = 5) org.springframework.data.domain.Pageable pageable,
+			Model md) {
 
-		List<Todo> todoList = null;
+		Page<Todo> todoPage = null;
 		if (todoService.isValid(todoQuery, result)) {
 			//エラーがなければ検索
-			todoList = todoDaoImpl.findByJPQL(todoQuery);
-		}
+			todoPage = todoDaoImpl.findByJPQL(todoQuery, pageable);
 
-		md.addAttribute("todoList", todoList);
+			session.setAttribute("todoQuery", todoQuery);
+
+			md.addAttribute("todoPage", todoPage);
+			md.addAttribute("todoList", todoPage.getContent());
+		} else {
+
+			md.addAttribute("todoPage", null);
+			md.addAttribute("todoList", null);
+
+		}
+		return "todoList";
+	}
+
+	@GetMapping("/todo/query")
+	public String queryTodo(@PageableDefault(page = 0, size = 5) Pageable pageable,
+			Model md) {
+
+		//sessionに保存されている情報で検索
+		TodoQuery todoQuery = (TodoQuery) session.getAttribute("todoQuery");
+		Page<Todo> todoPage = todoDaoImpl.findByJPQL(todoQuery, pageable);
+
+		md.addAttribute("todoQuery", todoQuery);
+		md.addAttribute("todoPage", todoPage);
+		md.addAttribute("todoList", todoPage.getContent());
 
 		return "todoList";
+
 	}
 
 }

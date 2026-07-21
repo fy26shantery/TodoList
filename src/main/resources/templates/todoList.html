@@ -50,16 +50,16 @@
 
 					
 					<td>
-						<input type="checkbox" value="Y" th:field="*{done}">完了
+						<input type="checkbox" value="Y" th:field="*{done}" th:text="#{finished}">
 					</td>
 					</tr>
 				</table>
-				<button type="submit" th:formaction="@{/todo/query}">検索</button>
+				<button type="submit" th:formaction="@{/todo/query}" th:text="#{search}"></button>
 		</div>
 		<div th:if="${#fields.hasErrors('deadlineFrom')}" th:errors="*{deadlineFrom}" th:errorclass="red"></div>
 		<div th:if="${#fields.hasErrors('deadlineTo')}" th:errors="*{deadlineTo}" th:errorclass="red"></div>
 		<hr>
-		<button type="submit" th:formaction="@{/todo/create/form}">新規追加</button>
+		<button type="submit" th:formaction="@{/todo/create}" th:formmethod="get" th:text="#{newregist}"></button>
 	</form>
 	
 	<table border="1">
@@ -74,12 +74,30 @@
 		<tr th:each="todo:${todoList}">
 			<td th:text="${todo.id}"></td>
 			<td><a th:href="@{/todo/__${todo.id}__}" th:text="${todo.title}"></td>
-			<td th:text="${todo.importance == 1 ? '★★★':'★'}"></td>
-			<td th:text="${todo.urgency == 1 ? '★★★':'★'}"></td>
+			<td th:text="${todo.importance == 1} ? #{value.triplestar}:#{value.singlestar}"></td>
+			<td th:text="${todo.urgency == 1} ? #{value.triplestar}:#{value.singlestar}"></td>
 			<td th:text="${todo.deadline}"></td>
 			<td th:text="${todo.done == 'Y' ? '完了':''}"></td>
 		</tr>
 	</table>
+	<div th:if="${todoList != null && #lists.size(todoList) != 0}">
+		<span th:text="|${todoPage.getNumber() + 1}/${todoPage.getTotalPages()}#{page.current}|"></span>
+		<ui id="nav">
+			<li>
+				<span th:if="${todoPage.isFirst()}" th:text="#{page.backward}"></span>
+				<a th:unless="${todoPage.isFirst()}" th:href="@{/todo/query(page = ${todoPage.getNumber() - 1})}" th:text="#{page.backward}" ></a>
+			</li>
+			<li th:each="i:${#numbers.sequence(0,todoPage.getTotalPages() - 1)}">
+			<span th:if="${i == todoPage.getNumber()}" th:text="${i + 1}"></span>
+			<a th:if="${i != todoPage.getNumber()}" th:href="@{/todo/query(page=${i})}"
+			th:text="${i + 1}"></a>
+			</li>
+			<li>
+				<span th:if="${todoPage.isLast()}" th:text="#{page.forward}"></span>
+				<a th:unless="${todoPage.isLast()}" th:href="@{/todo/query(page = (${todoPage.getNumber()+1}))}" th:text="#{page.forward}"></a>
+			</li>
+		</ui>
+	</div>
 
 </body>
 
