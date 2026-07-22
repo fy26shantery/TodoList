@@ -59,11 +59,15 @@
 		<div th:if="${#fields.hasErrors('deadlineFrom')}" th:errors="*{deadlineFrom}" th:errorclass="red"></div>
 		<div th:if="${#fields.hasErrors('deadlineTo')}" th:errors="*{deadlineTo}" th:errorclass="red"></div>
 		<hr>
-		<button type="submit" th:formaction="@{/todo/create}" th:formmethod="get" th:text="#{newregist}"></button>
-	</form>
+<!--		現在のページ番号を渡す-->
+		
+		<button type="submit" th:formaction="@{/todo/create/__${todoPage.getNumber()}__}" th:formmethod="get" th:text="#{newregist}"></button>
+		<button type="submit" th:formaction="@{/todo/delete/check}"  th:text="#{deletes}"></button>
+	
 	
 	<table border="1">
 		<tr>
+			<th th;text="#{html.head_delete}"></th>
 			<th th:text="#{html.head_Id}"></th>
 			<th th:text="#{html.head_title}"></th>
 			<th th:text="#{html.head_importance}"></th>
@@ -72,14 +76,19 @@
 			<th th:text="#{html.head_finish}"></th>
 		</tr>
 		<tr th:each="todo:${todoList}">
+<!--			削除したいデータを決定するチェックボックス-->
+			<td>
+				<input type="checkbox"  name="idList" th:value="${todo.id}">
+			</td>
 			<td th:text="${todo.id}"></td>
-			<td><a th:href="@{/todo/__${todo.id}__}" th:text="${todo.title}"></td>
+			<td><a th:href="@{/todo/__${todo.id}__/__${todoPage.getNumber()}__}" th:text="${todo.title}"></td>
 			<td th:text="${todo.importance == 1} ? #{value.triplestar}:#{value.singlestar}"></td>
 			<td th:text="${todo.urgency == 1} ? #{value.triplestar}:#{value.singlestar}"></td>
 			<td th:text="${todo.deadline}"></td>
 			<td th:text="${todo.done == 'Y' ? '完了':''}"></td>
 		</tr>
 	</table>
+	</form>
 	<div th:if="${todoList != null && #lists.size(todoList) != 0}">
 		<span th:text="|${todoPage.getNumber() + 1}/${todoPage.getTotalPages()}#{page.current}|"></span>
 		<ui id="nav">
@@ -87,7 +96,7 @@
 				<span th:if="${todoPage.isFirst()}" th:text="#{page.backward}"></span>
 				<a th:unless="${todoPage.isFirst()}" th:href="@{/todo/query(page = ${todoPage.getNumber() - 1})}" th:text="#{page.backward}" ></a>
 			</li>
-			<li th:each="i:${#numbers.sequence(0,todoPage.getTotalPages() - 1)}">
+			<li th:each="i:${#numbers.sequence(startPage,endPage)}">
 			<span th:if="${i == todoPage.getNumber()}" th:text="${i + 1}"></span>
 			<a th:if="${i != todoPage.getNumber()}" th:href="@{/todo/query(page=${i})}"
 			th:text="${i + 1}"></a>

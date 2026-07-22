@@ -1,5 +1,7 @@
 package com.example.todolist.controller;
 
+import java.util.List;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.example.todolist.dao.TodoDaoImpl;
 import com.example.todolist.entity.Todo;
@@ -46,7 +49,18 @@ public class TodolistController {
 	public String showTodoList(Model md,
 			@PageableDefault(page = 0, size = 5, sort = "id") org.springframework.data.domain.Pageable pageable) {
 		//一覧を検索して表示する
-		Page<Todo> todoPage = todoRepository.findAll(pageable);
+		Integer currentPage = (Integer) session.getAttribute("currentPage");
+		Page<Todo> todoPage = null;
+		//更新からの遷移の時、受け取った遷移前ページから始める
+		if (currentPage != null) {
+			Pageable updatePageable = pageable.withPage(currentPage);
+			todoPage = todoRepository.findAll(updatePageable);
+		} else {
+			//更新からの遷移でないとき
+			todoPage = todoRepository.findAll(pageable);
+		}
+
+		todoService.constitutePage(todoPage, md); //ページング数の指定
 		md.addAttribute("todoQuery", new TodoQuery());
 		md.addAttribute("todoPage", todoPage);
 		md.addAttribute("todoList", todoPage.getContent());
@@ -57,8 +71,9 @@ public class TodolistController {
 
 	//ToDo入力フォーム表示
 	//[処理1]ToDo一覧画面(todoList)で新規追加がクリックされたとき
-	@GetMapping("/todo/create")
-	public String createTodo(Model md) {
+	@GetMapping("/todo/create/{currentPage}")
+	public String createTodo(@PathVariable int currentPage, Model md) {
+		session.setAttribute("currentPage", currentPage);
 		md.addAttribute("todoData", new TodoData());
 		session.setAttribute("mode", "create");
 		return "todoForm";
@@ -73,6 +88,7 @@ public class TodolistController {
 		boolean isValid = todoService.isValid(todoData, result);
 		if (!result.hasErrors() && isValid) {
 			//エラーなし
+			//session.setAttribute("currentPage", currentPage); //create遷移前のtodoListのページを渡す
 			Todo todo = todoData.toEntity();
 			todoRepository.saveAndFlush(todo);
 			return "redirect:/todo";
@@ -86,11 +102,13 @@ public class TodolistController {
 	//[処理3]Todo入力画面でキャンセル登録がクリックされたとき
 	@PostMapping("/todo/cancel")
 	public String cancel() {
+		//session.setAttribute("currentPage", currentPage); //create遷移前のtodoListのページを渡す
 		return "redirect:/todo";
 	}
 
-	@GetMapping("/todo/{id}")
-	public String todoById(@PathVariable int id, Model md) {
+	@GetMapping("/todo/{id}/{currentPage}")
+	public String todoById(@PathVariable int id, @PathVariable int currentPage, Model md) {
+		session.setAttribute("currentPage", currentPage); //create遷移前のtodoListのページを渡す
 		Todo todo = todoRepository.findById(id).get();
 		md.addAttribute("todoData", todo);
 		session.setAttribute("mode", "update");
@@ -98,11 +116,13 @@ public class TodolistController {
 	}
 
 	@PostMapping("/todo/update")
-	public String updateTodo(TodoData todoData, BindingResult result, Model md) {
+	public String updateTodo(TodoData todoData,
+			BindingResult result, Model md) {
 		//エラーチェック
-		boolean isValid = todoService.isValid(todoData, result);
+		boolean isValid = todoService.isValidForUpdate(todoData, result);
 		if (!result.hasErrors() && isValid) {
 			//エラーなし
+			session.setAttribute("mode", "update");
 			Todo todo = todoData.toEntity();
 			todoRepository.saveAndFlush(todo);
 			return "redirect:/todo";
@@ -111,6 +131,20 @@ public class TodolistController {
 			return "todoForm";
 		}
 
+	}
+
+	//チェックボックスを用いての一括削除
+	@PostMapping("/todo/delete/check")
+	//複数送られてくる可能性があるのでList
+	public String deleteTodo(@RequestParam(required = false) List<Integer> idList) {//required=falseでnull落ちを防ぐ
+		if (idList != null) {
+			for (int id : idList) {
+
+				todoRepository.deleteById(id);
+			}
+		}
+
+		return "redirect:/todo";
 	}
 
 	@PostMapping("/todo/delete")
@@ -132,6 +166,7 @@ public class TodolistController {
 
 			session.setAttribute("todoQuery", todoQuery);
 
+			todoService.constitutePage(todoPage, md); //ページング数の指定
 			md.addAttribute("todoPage", todoPage);
 			md.addAttribute("todoList", todoPage.getContent());
 		} else {
@@ -151,6 +186,7 @@ public class TodolistController {
 		TodoQuery todoQuery = (TodoQuery) session.getAttribute("todoQuery");
 		Page<Todo> todoPage = todoDaoImpl.findByJPQL(todoQuery, pageable);
 
+		todoService.constitutePage(todoPage, md); //ページング数の指定
 		md.addAttribute("todoQuery", todoQuery);
 		md.addAttribute("todoPage", todoPage);
 		md.addAttribute("todoList", todoPage.getContent());

@@ -4,7 +4,9 @@ import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 
@@ -54,6 +56,25 @@ public class TodoService {
 					result.addError(fieldError);
 					ans = false;
 				}
+			} catch (DateTimeException e) {
+				FieldError fieldError = new FieldError(result.getObjectName(), "deadline", "deadline.format.error");
+				result.addError(fieldError);
+				ans = false;
+			}
+		}
+		return ans;
+	}
+
+	//update用のエラーチェック（期限過去は考慮しない）
+	public boolean isValidForUpdate(TodoData todoData, BindingResult result) {
+		boolean ans = true;
+
+		//期限のフォーマットが誤っていたらエラー
+		String deadline = todoData.getDeadline();
+		if (!deadline.equals("")) {
+			try {
+				LocalDate.parse(deadline);
+
 			} catch (DateTimeException e) {
 				FieldError fieldError = new FieldError(result.getObjectName(), "deadline", "deadline.format.error");
 				result.addError(fieldError);
@@ -135,4 +156,31 @@ public class TodoService {
 		}
 		return todoList;
 	}
+
+	//適切なページリンク表示用メソッド（前二つ後ろ二つ以内）
+	public void constitutePage(Page<Todo> todoPage, Model md) {
+		int currentPage = todoPage.getNumber();
+		int totalPage = todoPage.getTotalPages();
+
+		//現在ページより前のページについて
+		if (currentPage > 1) { //現在ページより前のページが十分にある場合
+			md.addAttribute("startPage", currentPage - 2);
+		} else if (todoPage.isFirst()) {//現在ページが最初の場合
+			md.addAttribute("startPage", currentPage);
+		} else {
+			//現在ページより前に１ページしかない場合
+			md.addAttribute("startPage", currentPage - 1);
+		}
+
+		//現在ページより後のページについて
+		if (currentPage + 2 < totalPage) { //現在ページより後のページが十分にある場合
+			md.addAttribute("endPage", currentPage + 2);
+		} else if (todoPage.isLast()) { //現在ページが最後の場合
+			md.addAttribute("endPage", currentPage);
+		} else {
+			//現在ページより後ろに１ページしかない場合
+			md.addAttribute("endPage", currentPage + 1);
+		}
+	}
+
 }
