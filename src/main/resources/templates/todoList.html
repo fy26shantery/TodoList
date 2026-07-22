@@ -1,112 +1,132 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
-  <meta charset="UTF-8">
-  <title th:text="#{label.todo.list}">ToDo List</title>
-  <link th:href="@{/css/style.css}" rel="stylesheet" type="text/css">
+	<meta charset="UTF-8">
+	<title th:text="#{label.todo.list}">ToDo List</title>
+	<link th:href="@{/css/style.css}" rel="stylesheet" type="text/css">
 </head>
+
 <body>
-  <form th:action="@{/}" method="post" th:object="${todoQuery}">
-    <div style="display: flex">
-      <table border="1">
-        <tr>
-          <th th:text="#{label.title}">件名</th>
-          <th th:text="#{label.importance}">重要度</th>
-          <th th:text="#{label.urgency}">緊急度</th>
-          <th th:text="#{label.deadline}">期限</th>
-          <th th:text="#{label.done}">完了</th>
-        </tr>
-        <tr>
-          <td>
-            <input type="text" name="title" size="40" th:value="*{title}">
-          </td>
-          <td>
-            <select name="importance">
-              <option value="-1" th:field="*{importance}" th:text="#{label.hyphen}">-</option>
-              <option value="1" th:field="*{importance}" th:text="#{label.high}">高</option>
-              <option value="0" th:field="*{importance}" th:text="#{label.low}">低</option>
-            </select>
-          </td>
-          <td>
-            <select name="urgency">
-              <option value="-1" th:field="*{urgency}" th:text="#{label.hyphen}">-</option>
-              <option value="1" th:field="*{urgency}" th:text="#{label.high}">高</option>
-              <option value="0" th:field="*{urgency}" th:text="#{label.low}">低</option>
-            </select>
-          </td>
-          <td>
-            <input type="text" name="deadlineFrom" th:value="*{deadlineFrom}" size="10" placeholder="yyyy-mm-dd">
-            <span th:text="#{mark.tilde}">～</span>
-            <input type="text" name="deadlineTo" th:value="*{deadlineTo}" size="10" placeholder="yyyy-mm-dd">
-          </td>
-          <td>
-            <label>
-              <input type="checkbox" value="Y" th:field="*{done}">
-              <span th:text="#{label.done.true}">完了</span>
-            </label>
-          </td>
-        </tr>
-      </table>
-      <button type="submit" th:formaction="@{/todo/query}" th:text="#{button.search}">検索</button>
-    </div>
-    <div th:if="${#fields.hasErrors('deadlineFrom')}" th:errors="*{deadlineFrom}" th:errorclass="red"></div>
-    <div th:if="${#fields.hasErrors('deadlineTo')}" th:errors="*{deadlineTo}" th:errorclass="red"></div>
-    <hr>
-  </form>
-
-  <p>
-	<form th:action="@{/todo/create}" method="get">
-	    <button type="submit" th:text="#{label.create.new}">新規追加</button>
+	<!-- 検索フォーム -->
+	<form th:action="@{/}" method="post" th:object="${todoQuery}">
+		<div style="display: flex">
+			<table border="1">
+				<tr>
+					<th th:text="#{label.title}">件名</th>
+					<th th:text="#{label.importance}">重要度</th>
+					<th th:text="#{label.urgency}">緊急度</th>
+					<th th:text="#{label.deadline}">期限</th>
+					<th th:text="#{label.done}">完了</th>
+				</tr>
+				<tr>
+					<td>
+						<input type="text" name="title" size="40" th:value="*{title}">
+					</td>
+					<td>
+						<select name="importance">
+							<option value="-1" th:field="*{importance}" th:text="#{label.hyphen}">-</option>
+							<option value="1" th:field="*{importance}" th:text="#{label.high}">高</option>
+							<option value="0" th:field="*{importance}" th:text="#{label.low}">低</option>
+						</select>
+					</td>
+					<td>
+						<select name="urgency">
+							<option value="-1" th:field="*{urgency}" th:text="#{label.hyphen}">-</option>
+							<option value="1" th:field="*{urgency}" th:text="#{label.high}">高</option>
+							<option value="0" th:field="*{urgency}" th:text="#{label.low}">低</option>
+						</select>
+					</td>
+					<td>
+						<input type="text" name="deadlineFrom" th:value="*{deadlineFrom}" size="10"
+							placeholder="yyyy-mm-dd">
+						<span th:text="#{mark.tilde}">～</span>
+						<input type="text" name="deadlineTo" th:value="*{deadlineTo}" size="10"
+							placeholder="yyyy-mm-dd">
+					</td>
+					<td>
+						<label>
+							<input type="checkbox" value="Y" th:field="*{done}">
+							<span th:text="#{label.done.true}">完了</span>
+						</label>
+					</td>
+				</tr>
+			</table>
+			<button type="submit" th:formaction="@{/todo/query}" th:text="#{button.search}">検索</button>
+		</div>
+		<div th:if="${#fields.hasErrors('deadlineFrom')}" th:errors="*{deadlineFrom}" th:errorclass="red"></div>
+		<div th:if="${#fields.hasErrors('deadlineTo')}" th:errors="*{deadlineTo}" th:errorclass="red"></div>
+		<hr>
 	</form>
-  </p>
 
-  <table border="1">
-    <tr>
-      <th th:text="#{label.id}">id</th>
-      <th th:text="#{label.title}">件名</th>
-      <th th:text="#{label.importance}">重要度</th>
-      <th th:text="#{label.urgency}">緊急度</th>
-      <th th:text="#{label.deadline}">期限</th>
-      <th th:text="#{label.done}">完了</th>
-    </tr>
-    <tr th:each="todo:${todoList}">
-      <td th:text="${todo.id}"></td>
-      <td>
-        <a th:href="@{/todo/__${todo.id}__}" th:text="${todo.title}"></a>
-      </td>
-      <td th:text="${todo.importance == 1} ? #{mark.high} : #{mark.low}"></td>
-      <td th:text="${todo.urgency == 1} ? #{mark.high} : #{mark.low}"></td>
-      <td th:text="${todo.deadline}"></td>
-      <td th:text="${todo.done == 'Y'} ? #{label.done.true} : ''"></td>
-    </tr>
-  </table>
+	<!--ボタン　新規追加と選択した項目を削除-->
+	<div style="display: flex; gap: 10px; margin-bottom: 10px;">
+		<form th:action="@{/todo/create}" method="get">
+			<button type="submit" th:text="#{label.create.new}">新規追加</button>
+		</form>
 
-  <!--ページネーション-->
-  <div>
-    <div th:if="${todoList != null && #lists.size(todoList) != 0}">
-      <!--現在のページ数、総ページ数の順で動的に値を入れられるようにプロパティで定義してある-->
-      <span th:text="#{msg.pagination.info(${todoPage.getNumber() + 1}, ${todoPage.getTotalPages()})}"></span>
-      <ul id="nav">
-        <li>
-          <span th:if="${todoPage.isFirst()}" th:text="#{label.pagination.prev}">←前</span> 
-          <a th:unless="${todoPage.isFirst()}"
-             th:href="@{/todo/query(page = ${todoPage.getNumber() - 1})}"
-             th:text="#{label.pagination.prev}">←前</a>
-        </li>
-        <li th:each="i : ${#numbers.sequence(0, todoPage.getTotalPages() - 1)}">
-          <span th:if="${i == todoPage.getNumber()}" th:text="${i + 1}"></span>
-          <a th:if="${i != todoPage.getNumber()}"
-             th:href="@{/todo/query(page=${i})}" th:text="${i + 1}"></a>
-        </li>
-        <li>
-          <span th:if="${todoPage.isLast()}" th:text="#{label.pagination.next}">次→</span> 
-          <a th:unless="${todoPage.isLast()}"
-             th:href="@{/todo/query(page = ${todoPage.getNumber() + 1})}"
-             th:text="#{label.pagination.next}">次→</a>
-        </li>
-      </ul>
-    </div>
-  </div>
+		<button type="submit" form="deleteForm">選択した項目を削除</button>
+	</div>
 
+	<!-- ToDoテーブル -->
+	<form id="deleteForm" th:action="@{/todo/deleteList}" method="post">
+		<table border="1">
+			<tr>
+				<!-- 全選択用チェックボックス -->
+				<th><input type="checkbox" id="selectAll"></th>
+				<th th:text="#{label.id}">id</th>
+				<th th:text="#{label.title}">件名</th>
+				<th th:text="#{label.importance}">重要度</th>
+				<th th:text="#{label.urgency}">緊急度</th>
+				<th th:text="#{label.deadline}">期限</th>
+				<th th:text="#{label.done}">完了</th>
+			</tr>
+			<tr th:each="todo:${todoList}">
+				<!--削除対象ID送信用のチェックボックス-->
+				<td><input type="checkbox" name="deleteIds" th:value="${todo.id}" class="todo-checkbox"></td>
+				<td th:text="${todo.id}"></td>
+				<td>
+					<a th:href="@{/todo/__${todo.id}__}" th:text="${todo.title}"></a>
+				</td>
+				<td th:text="${todo.importance == 1} ? #{mark.high} : #{mark.low}"></td>
+				<td th:text="${todo.urgency == 1} ? #{mark.high} : #{mark.low}"></td>
+				<td th:text="${todo.deadline}"></td>
+				<td th:text="${todo.done == 'Y'} ? #{label.done.true} : ''"></td>
+			</tr>
+		</table>
+	</form>
+
+	<!-- ページネーション、前後2ページ-->
+	<div>
+		<div th:if="${todoList != null && #lists.size(todoList) != 0}">
+			<span th:text="#{msg.pagination.info(${todoPage.getNumber() + 1}, ${todoPage.getTotalPages()})}"></span>
+			<ul id="nav">
+				<li>
+					<span th:if="${todoPage.isFirst()}" th:text="#{label.pagination.prev}">←前</span>
+					<a th:unless="${todoPage.isFirst()}" th:href="@{/todo/query(page = ${todoPage.getNumber() - 1})}"
+						th:text="#{label.pagination.prev}">←前</a>
+				</li>
+				<!-- startPageからendPageまでループする -->
+				<li th:each="i : ${#numbers.sequence(startPage, endPage)}">
+					<span th:if="${i == todoPage.getNumber()}" th:text="${i + 1}"></span>
+					<a th:if="${i != todoPage.getNumber()}" th:href="@{/todo/query(page=${i})}" th:text="${i + 1}"></a>
+				</li>
+				<li>
+					<span th:if="${todoPage.isLast()}" th:text="#{label.pagination.next}">次→</span>
+					<a th:unless="${todoPage.isLast()}" th:href="@{/todo/query(page = ${todoPage.getNumber() + 1})}"
+						th:text="#{label.pagination.next}">次→</a>
+				</li>
+			</ul>
+		</div>
+	</div>
+
+	<!-- 全選択、全解除-->
+	<script>
+		document.getElementById('selectAll').addEventListener('change', function () {
+			//idの横に配置した全選択のチェックボックスがtrueにchangeした時にすべてのチェックを付ける
+			document.querySelectorAll('.todo-checkbox').forEach(cb => cb.checked = this.checked);
+		});
+	</script>
 </body>
+
 </html>

@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository;
 import com.example.todolist.entity.Todo;
 
 @Repository
+//定型的なDB操作を自動化するインターフェース
+//JPAが自動で実装クラスをつくってくれる
 public interface TodoRepository extends JpaRepository<Todo, Integer> {
 	List<Todo> findByTitleLike(String title);
 

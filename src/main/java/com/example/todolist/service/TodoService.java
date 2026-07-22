@@ -16,11 +16,12 @@ import com.example.todolist.repository.TodoRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
+//アプリの様々な、複雑な処理をするクラス
 @RequiredArgsConstructor
 public class TodoService {
 	private final TodoRepository todoRepository;
 
-	public boolean isValid(TodoData todoData, BindingResult result) {
+	public boolean isValid(TodoData todoData, BindingResult result, String mode) {
 		boolean ans = true;
 
 		// 件名が全角スペースのとき
@@ -47,7 +48,9 @@ public class TodoService {
 			LocalDate deadlineDate = null;
 			try {
 				deadlineDate = LocalDate.parse(deadline);
-				if (deadlineDate.isBefore(today)) {
+				if ("create".equals(mode) && deadlineDate.isBefore(today)) {
+					//createモードの時は今日より前の日付であるかチェック
+
 					result.rejectValue("deadline", "todo.deadline.past");
 					ans = false;
 				}

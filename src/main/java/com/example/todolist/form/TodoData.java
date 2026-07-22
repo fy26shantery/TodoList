@@ -13,6 +13,8 @@ import com.example.todolist.entity.Todo;
 import lombok.Data;
 
 @Data
+//画面から送られてきた入力値を保管する箱があるクラス
+//エンティティにこの箱を用意しないのは、DBと画面入力は型が一致するとは限らないから
 public class TodoData {
 	private Integer id;
 
@@ -29,7 +31,7 @@ public class TodoData {
 	private String done;
 
 	//		 入力データからEntityを作って返す
-
+	//画面の入力値をDB用に変換
 	public Todo toEntity() {
 		Todo todo = new Todo();
 		todo.setId(id);
