@@ -16,11 +16,11 @@ public interface TodoRepository extends JpaRepository<Todo, Integer> {
 
 	List<Todo> findByUrgency(Integer urgency);
 
-	List<Todo> findByDeadLineBetweenOrderByDeadlineAsc(Date form, Date to);
+	List<Todo> findByDeadlineBetweenOrderByDeadlineAsc(Date form, Date to);
 
-	List<Todo> findByDeadLineGreaterThanEqualOrderByDeadlineAsc(Date form);
+	List<Todo> findByDeadlineGreaterThanEqualOrderByDeadlineAsc(Date form);
 
-	List<Todo> findByDeadLineLessThanEqualOrderByDeadlineAsc(Date to);
+	List<Todo> findByDeadlineLessThanEqualOrderByDeadlineAsc(Date to);
 
 	List<Todo> findByDone(String done);
 

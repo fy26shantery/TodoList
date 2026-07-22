@@ -10,28 +10,28 @@
 			<div style="display: flex;">
 				<table border="1">
 				<tr>
-					<th>件名</th>
-					<th>重要度</th>
-					<th>緊急度</th>
-					<th>期限</th>
-					<th>完了</th>
+					<th th:text="#{todo.id}"></th>
+					<th th:text="#{todo.title}"></th>
+					<th th:text="#{todo.importance}"></th>
+					<th th:text="#{todo.urgency}"></th>
+					<th th:text="#{todo.deadline}"></th>
 				</tr>
 				<tr>
 					<td>
-						<input type="text" name="title" size="40" value="*{title}">
+						<input type="text" name="title" size="40" th:value="*{title}">
 					</td>
 					<td>
 						<select name="importance">
-							<option value="-1" th:field="*{importance}">-</option>
-							<option value="1" th:field="*{importance}">高</option>
-							<option value="-0" th:field="*{importance}">低</option>
+							<option value="-1" th:field="*{importance}"><a th:text="#{todo.haihun}"></a></option>
+							<option value="1" th:field="*{importance}"><a th:text="#{todo.taka}"></a></option>
+							<option value="-0" th:field="*{importance}"><a th:text="#{todo.hiku}"></a></option>
 						</select>
 					</td>
 					<td>
 						<select name="urgency">
-							<option value="-1" th:field="*{urgency}">-</option>
-							<option value="1" th:field="*{urgency}">高</option>
-							<option value="-0" th:field="*{urgency}">低</option> 
+							<option value="-1" th:field="*{urgency}"><a th:text="#{todo.haihun}"></a></option>
+							<option value="1" th:field="*{urgency}"><a th:text="#{todo.taka}"></a></option>
+							<option value="-0" th:field="*{urgency}"><a th:text="#{todo.hiku}"></a></option> 
 						</select>
 					</td>
 					<td>
@@ -40,16 +40,16 @@
 						<input type="tsxt" name="deadlineTo" th:value="*{deadlineTo}" size="10" placeholder="yyyy-mm-dd">
 					</td>
 					<td>
-						<input type="checkbox" value="Y" th:field="*{done}">完了
+						<input type="checkbox" value="Y" th:field="*{done}"><a th:text="#{todo.done}"></a>
 					</td>
 				</tr>	
 				</table>
-				<button type="submit" th:formaction="@{/todo/query}">検索</button>
+				<button type="submit" th:formaction="@{/todo/query}"><a th:text="#{todo.search}"></a></button>
 			</div>
 			<div th:if="${#fields.hasErrors('deadlineForm')}" th:errors="*{deadlineFrom}" th:erroeclass="red"></div>
 			<div th:if="${#fields.hasErrors('deadlineTo')}" th:errors="*{deadlineTo}" th:erroeclass="red"></div>
 			<hr>
-			<button type="submit" th:formaction="@{/todo/create/form}">新規追加</button>
+			<button type="submit" th:formaction="@{/todo/create/form}"><a th:text="#{todo.NewAddition}"></a></button>
 		</form>
 <!--	<a th:href="@{/todo/create}">新規追加</a>-->
 	<table border="1">
@@ -68,8 +68,29 @@
 			<td th:text="${todo.importance == 1 ? '★★★':'★'}"></td>
 			<td th:text="${todo.urgency == 1 ? '★★★':'★'}"></td>
 			<td th:text="${todo.deadline}"></td>
-			<td th:text="${todo.done == 'Y' ? '完了':''}"></td>
-		</tr>
+			<td th:text="${todo.done == 'Y' ? #messages.msg('todo.done') : #messages.msg('todo.notDone')}"></td>	
+			</tr>
 	</table>
+	<div th:if="${todoList != null && #lists.size(todoList) != 0}">
+		<span th:text="|${todoPage.getNumber() + 1} / ${todoPage.getTotalPages()} ページを表示中|">	
+		</span>
+		<ul id="nav">
+			<li>
+				<span th:if="${todoPage.isFirst()}">←前</span>
+					<a th:unless="${todoPage.isFirst()}"
+					   th:href="@{/todo/query(page=${todoPage.getNumber() -1})}">←前</a>
+			</li>
+			<li th:each="i : ${#numbers.sequence(0, todoPage.getTotalPages() -1)}">
+				<span th:if="${i == todoPage.getNumber()}" th:text="${i +1}"></span>
+				<a th:if="${i != todoPage.getNumber()}"
+					th:href="@{/todo/query(page=${i})}" th:text="${i +1}"></a>
+			</li>
+			<li>
+				<span th:if="${todoPage.isLast()}">次→</span>
+				<a th:unless="${todoPage.isLast()}"
+					th:href="@{/todo/query(page = (${todoPage.getNumber()+1}))}">次→</a>
+			</li>
+		</ul>
+	</div>
 </body>
 </html>
