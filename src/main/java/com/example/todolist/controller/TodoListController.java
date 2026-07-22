@@ -36,11 +36,14 @@ public class TodoListController {
 
 	@GetMapping("/todo")
 	public String showTodoList(Model model,
-			@PageableDefault(page = 0, size = 5, sort = "id") Pageable pageable) {
+			@PageableDefault(page = 0, size = 5, sort = "id") Pageable pageable,
+			@RequestParam(name = "selectAll", required = false, defaultValue = "false") boolean selectAll) {
 		Page<Todo> todoPage = todoRepository.findAll(pageable);
 		model.addAttribute("todoQuery", new TodoQuery());
 		model.addAttribute("todoPage", todoPage);
 		model.addAttribute("todoList", todoPage.getContent());
+		model.addAttribute("selectAll", selectAll);
+
 		session.setAttribute("todoQuery", new TodoQuery());
 
 		// 戻り先URLを保存
@@ -65,6 +68,7 @@ public class TodoListController {
 
 			model.addAttribute("todoPage", todoPage);
 			model.addAttribute("todoList", todoPage.getContent());
+			model.addAttribute("selectAll", false);
 
 			// 戻り先URLを保存
 			session.setAttribute("returnUrl", "/todo/query?page=" + pageable.getPageNumber());
@@ -81,12 +85,15 @@ public class TodoListController {
 	//検索後にページリンクを押したとき
 	//ページリンクを押したときにURLと一緒に送られてくるのは何ページ目かという情報だけ
 	//だからセッションに保存しておいた検索条件をtodoQueryから取る
-	public String queryTodo(@PageableDefault(page = 0, size = 5) Pageable pageable, Model model) {
+	public String queryTodo(@PageableDefault(page = 0, size = 5) Pageable pageable,
+			@RequestParam(name = "selectAll", required = false, defaultValue = "false") boolean selectAll,
+			Model model) {
 		TodoQuery todoQuery = (TodoQuery) session.getAttribute("todoQuery");
 		Page<Todo> todoPage = todoDao.findByJPQL(todoQuery, pageable);
 		model.addAttribute("todoQuery", todoQuery);
 		model.addAttribute("todoPage", todoPage);
 		model.addAttribute("todoList", todoPage.getContent());
+		model.addAttribute("selectAll", selectAll);
 
 		// 戻り先URLを保存
 		session.setAttribute("returnUrl", "/todo/query?page=" + pageable.getPageNumber());

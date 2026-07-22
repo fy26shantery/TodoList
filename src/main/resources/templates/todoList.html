@@ -59,21 +59,34 @@
 		<hr>
 	</form>
 
-	<!--ボタン　新規追加と選択した項目を削除-->
+	<!--ボタン-->
 	<div style="display: flex; gap: 10px; margin-bottom: 10px;">
 		<form th:action="@{/todo/create}" method="get">
 			<button type="submit" th:text="#{label.create.new}">新規追加</button>
 		</form>
 
 		<button type="submit" form="deleteForm">選択した項目を削除</button>
+
+		<!--全選択、全解除-->
+		<th:block th:if="${todoPage != null}">
+			<form th:action="@{/todo/query}" method="get">
+				<input type="hidden" name="page" th:value="${todoPage.getNumber()}">
+				<input type="hidden" name="selectAll" value="true">
+				<button type="submit">全選択</button>
+			</form>
+			<form th:action="@{/todo/query}" method="get">
+				<input type="hidden" name="page" th:value="${todoPage.getNumber()}">
+				<input type="hidden" name="selectAll" value="false">
+				<button type="submit">全解除</button>
+			</form>
+		</th:block>
 	</div>
 
 	<!-- ToDoテーブル -->
 	<form id="deleteForm" th:action="@{/todo/deleteList}" method="post">
 		<table border="1">
 			<tr>
-				<!-- 全選択用チェックボックス -->
-				<th><input type="checkbox" id="selectAll"></th>
+				<th>選択</th>
 				<th th:text="#{label.id}">id</th>
 				<th th:text="#{label.title}">件名</th>
 				<th th:text="#{label.importance}">重要度</th>
@@ -82,8 +95,8 @@
 				<th th:text="#{label.done}">完了</th>
 			</tr>
 			<tr th:each="todo:${todoList}">
-				<!--削除対象ID送信用のチェックボックス-->
-				<td><input type="checkbox" name="deleteIds" th:value="${todo.id}" class="todo-checkbox"></td>
+				<!-- th:checked="${selectAll}" で、Controllerから渡された値をもとにチェックを制御 -->
+				<td><input type="checkbox" name="deleteIds" th:value="${todo.id}" th:checked="${selectAll}"></td>
 				<td th:text="${todo.id}"></td>
 				<td>
 					<a th:href="@{/todo/__${todo.id}__}" th:text="${todo.title}"></a>
@@ -120,13 +133,6 @@
 		</div>
 	</div>
 
-	<!-- 全選択、全解除-->
-	<script>
-		document.getElementById('selectAll').addEventListener('change', function () {
-			//idの横に配置した全選択のチェックボックスがtrueにchangeした時にすべてのチェックを付ける
-			document.querySelectorAll('.todo-checkbox').forEach(cb => cb.checked = this.checked);
-		});
-	</script>
 </body>
 
 </html>
