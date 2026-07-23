@@ -10,6 +10,7 @@
 <body>
 	<!-- 検索フォーム -->
 	<form th:action="@{/}" method="post" th:object="${todoQuery}">
+		<!-- 省略せずにそのまま（変更なし） -->
 		<div style="display: flex">
 			<table border="1">
 				<tr>
@@ -59,34 +60,32 @@
 		<hr>
 	</form>
 
-	<!--ボタン-->
+	<!--ボタン 新規追加と、全選択・全解除・選択した項目を削除-->
 	<div style="display: flex; gap: 10px; margin-bottom: 10px;">
 		<form th:action="@{/todo/create}" method="get">
 			<button type="submit" th:text="#{label.create.new}">新規追加</button>
 		</form>
 
-		<button type="submit" form="deleteForm">選択した項目を削除</button>
-
-		<!--全選択、全解除-->
-		<th:block th:if="${todoPage != null}">
-			<form th:action="@{/todo/query}" method="get">
-				<input type="hidden" name="page" th:value="${todoPage.getNumber()}">
-				<input type="hidden" name="selectAll" value="true">
-				<button type="submit">全選択</button>
-			</form>
-			<form th:action="@{/todo/query}" method="get">
-				<input type="hidden" name="page" th:value="${todoPage.getNumber()}">
-				<input type="hidden" name="selectAll" value="false">
-				<button type="submit">全解除</button>
-			</form>
-		</th:block>
+		<!-- 追加：全選択・全解除ボタン（deleteForm に紐付け、宛先を切り替える） -->
+		<button type="submit" form="deleteForm" th:formaction="@{/todo/selectAll}"
+			th:text="#{button.selectAll}">全選択</button>
+		<button type="submit" form="deleteForm" th:formaction="@{/todo/deselectAll}"
+			th:text="#{button.deselectAll}">全解除</button>
+		<button type="submit" form="deleteForm" th:text="#{button.delete.selected}">選択した項目を削除</button>
 	</div>
+
+	<!-- 削除エラー時のメッセージ表示領域 -->
+	<div th:if="${deleteError}" th:text="#{todo.delete.noselect}" class="red" style="margin-bottom: 10px;"></div>
 
 	<!-- ToDoテーブル -->
 	<form id="deleteForm" th:action="@{/todo/deleteList}" method="post">
+		<!-- 追加：現在のページ番号をサーバーに伝えるため -->
+		<input type="hidden" name="page" th:if="${todoPage != null}" th:value="${todoPage.getNumber()}">
+
 		<table border="1">
 			<tr>
-				<th>選択</th>
+				<!-- 見出しを単なる「チェック」に変更 -->
+				<th th:text="#{label.check}">チェック</th>
 				<th th:text="#{label.id}">id</th>
 				<th th:text="#{label.title}">件名</th>
 				<th th:text="#{label.importance}">重要度</th>
@@ -95,8 +94,9 @@
 				<th th:text="#{label.done}">完了</th>
 			</tr>
 			<tr th:each="todo:${todoList}">
-				<!-- th:checked="${selectAll}" で、Controllerから渡された値をもとにチェックを制御 -->
-				<td><input type="checkbox" name="deleteIds" th:value="${todo.id}" th:checked="${selectAll}"></td>
+				<!-- th:checked を追加し、サーバーからの選択状態（checkedIds）を反映する -->
+				<td><input type="checkbox" name="deleteIds" th:value="${todo.id}" class="todo-checkbox"
+						th:checked="${checkedIds != null and #lists.contains(checkedIds, todo.id)}"></td>
 				<td th:text="${todo.id}"></td>
 				<td>
 					<a th:href="@{/todo/__${todo.id}__}" th:text="${todo.title}"></a>
@@ -119,7 +119,6 @@
 					<a th:unless="${todoPage.isFirst()}" th:href="@{/todo/query(page = ${todoPage.getNumber() - 1})}"
 						th:text="#{label.pagination.prev}">←前</a>
 				</li>
-				<!-- startPageからendPageまでループする -->
 				<li th:each="i : ${#numbers.sequence(startPage, endPage)}">
 					<span th:if="${i == todoPage.getNumber()}" th:text="${i + 1}"></span>
 					<a th:if="${i != todoPage.getNumber()}" th:href="@{/todo/query(page=${i})}" th:text="${i + 1}"></a>
@@ -133,6 +132,7 @@
 		</div>
 	</div>
 
+	<!-- JavaScriptは不要なため削除しました -->
 </body>
 
 </html>

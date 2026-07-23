@@ -42,3 +42,23 @@ button {
 #nav li {
 	margin-right: 10px;
 }
+
+.select-btn-group {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	padding: 4px;
+}
+
+.select-btn-group button {
+	font-size: 10px;
+	padding: 2px 6px;
+	cursor: pointer;
+	background-color: #f0f0f0;
+	border: 1px solid #ccc;
+	border-radius: 3px;
+}
+
+.select-btn-group button:hover {
+	background-color: #e0e0e0;
+}

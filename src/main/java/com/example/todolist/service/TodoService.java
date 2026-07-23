@@ -64,29 +64,50 @@ public class TodoService {
 
 	public boolean isValid(TodoQuery todoQuery, BindingResult result) {
 		boolean ans = true;
+		LocalDate fromDate = null;
+		LocalDate toDate = null;
 
-		// 期限入力の形式チェック
-		String date = todoQuery.getDeadlineFrom();
-		if (!date.equals("")) {
+		// 期限入力の形式チェック（From）
+		String dateFrom = todoQuery.getDeadlineFrom();
+		if (!dateFrom.equals("")) {
 			try {
-				LocalDate.parse(date);
+				fromDate = LocalDate.parse(dateFrom);
 			} catch (DateTimeException e) {
 				result.rejectValue("deadlineFrom", "todo.deadlineFrom.format");
 				ans = false;
 			}
 		}
 
-		// 期限入力の形式チェック
-		date = todoQuery.getDeadlineTo();
-		if (!date.equals("")) {
+		// 期限入力の形式チェック（To）
+		String dateTo = todoQuery.getDeadlineTo();
+		if (!dateTo.equals("")) {
 			try {
-				LocalDate.parse(date);
+				toDate = LocalDate.parse(dateTo);
 			} catch (DateTimeException e) {
 				result.rejectValue("deadlineTo", "todo.deadlineTo.format");
 				ans = false;
 			}
 		}
+
+		//両方とも形式エラーがない場合、大小関係をチェックする
+		if (fromDate != null && toDate != null) {
+			// 開始日が終了日より後の場合
+			if (fromDate.isAfter(toDate)) {
+				result.rejectValue("deadlineFrom", "todo.deadline.range");
+				ans = false;
+			}
+		}
+
 		return ans;
+	}
+
+	public boolean isValidDelete(List<Integer> deleteIds, BindingResult result) {
+		if (deleteIds == null || deleteIds.isEmpty()) {
+			// messages.properties のキーを指定（フィールド名がない場合はグローバルエラー）
+			result.reject("todo.delete.none");
+			return false;
+		}
+		return true;
 	}
 
 	public List<Todo> doQuery(TodoQuery todoQuery) {
