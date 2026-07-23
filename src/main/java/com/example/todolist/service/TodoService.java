@@ -103,7 +103,6 @@ public class TodoService {
 
 	public boolean isValidDelete(List<Integer> deleteIds, BindingResult result) {
 		if (deleteIds == null || deleteIds.isEmpty()) {
-			// messages.properties のキーを指定（フィールド名がない場合はグローバルエラー）
 			result.reject("todo.delete.none");
 			return false;
 		}

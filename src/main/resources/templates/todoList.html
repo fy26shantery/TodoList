@@ -10,7 +10,6 @@
 <body>
 	<!-- 検索フォーム -->
 	<form th:action="@{/}" method="post" th:object="${todoQuery}">
-		<!-- 省略せずにそのまま（変更なし） -->
 		<div style="display: flex">
 			<table border="1">
 				<tr>
@@ -66,7 +65,7 @@
 			<button type="submit" th:text="#{label.create.new}">新規追加</button>
 		</form>
 
-		<!-- 追加：全選択・全解除ボタン（deleteForm に紐付け、宛先を切り替える） -->
+		<!--全選択・全解除ボタン（deleteForm に紐付け、宛先を切り替える） -->
 		<button type="submit" form="deleteForm" th:formaction="@{/todo/selectAll}"
 			th:text="#{button.selectAll}">全選択</button>
 		<button type="submit" form="deleteForm" th:formaction="@{/todo/deselectAll}"
@@ -74,7 +73,6 @@
 		<button type="submit" form="deleteForm" th:text="#{button.delete.selected}">選択した項目を削除</button>
 	</div>
 
-	<!-- 削除エラー時のメッセージ表示領域 -->
 	<div th:if="${deleteError}" th:text="#{todo.delete.noselect}" class="red" style="margin-bottom: 10px;"></div>
 
 	<!-- ToDoテーブル -->
@@ -84,7 +82,6 @@
 
 		<table border="1">
 			<tr>
-				<!-- 見出しを単なる「チェック」に変更 -->
 				<th th:text="#{label.check}">チェック</th>
 				<th th:text="#{label.id}">id</th>
 				<th th:text="#{label.title}">件名</th>
@@ -132,7 +129,6 @@
 		</div>
 	</div>
 
-	<!-- JavaScriptは不要なため削除しました -->
 </body>
 
 </html>
