@@ -9,8 +9,67 @@
 </head>
 
 <body>
-	<a th:href="@{/todo/create}" th:text="#{todo.insert}"> </a>
-	<table>
+<!--	追加開始-->
+
+	<form th:action="@{/}" method="post" th:object="${todoQuery}">
+			<!--	css-->
+			<div style="display: flex;">
+			<table border="1">
+				<tr>
+					<th th:text="#{todo.title}"></th>
+					<th th:text="#{todo.importance}"></th>
+					<th th:text="#{todo.urgency}"></th>
+					<th th:text="#{todo.deadline}"></th>
+					<th th:text="#{todo.done}"></th>
+				</tr>
+				<tr>
+					<td>
+						<input type="text" name="title" size="40" th:value="*{title}">
+					</td>
+					<td>
+						<select name="importance">
+							<option value="-1" th:field="*{importance}" th:text="#{todo.mainasu}"></option>
+							<option value="1" th:field="*{importance}" th:text="#{todo.hight}"></option>
+							<option value="0" th:field="*{importance}" th:text="#{todo.low}"></option>
+
+						</select>
+					</td>
+					<td>
+						<select name="urgency">
+							<option value="-1" th:field="*{urgency}" th:text="#{todo.mainasu}"></option>
+							<option value="1" th:field="*{urgency}" th:text="#{todo.hight}"></option>
+							<option value="0" th:field="*{urgency}" th:text="#{todo.low}"></option>
+
+						</select>
+					</td>
+					<td>
+						<input type="text" name="deadlineFrom" th:value="*{deadlineFrom}" size="10"
+						placeholder="yyyy-mm-dd" th:text="#{todo.line}">
+						
+					<input type="text" name="deadlineTo" th:value="*{deadlineTo}" size="10"
+											placeholder="yyyy-mm-dd">
+					</td>
+					<td>
+						<input type="checkbox" value="Y" th:field="*{done}" th:text="#{todo.done}">
+					</td>
+					</tr>
+			</table>
+			<button type="submit" th:formaction="@{/todo/query}" th:text="#{todo.search}"></button>
+		</div>
+		
+		<div th:if="${#fields.hasErrors('deadlineFrom')}" th:text="#{service.deadlinestart}"
+			th:class="red"></div>
+			
+			<div th:if="${#fields.hasErrors('deadlineTo')}" th:errors="*{deadlineTo}"
+						th:errorclass="red"></div>
+			
+			<hr>
+			<button type="submit" th:formaction="@{/todo/create/form}" th:text="#{todo.insert}"></button>
+	</form>
+
+
+<!--終了-->
+	<table border="1">
 		<tr>
 			<th th:text="#{todo.id}"></th>
 			<th th:text="#{todo.title}"></th>
@@ -30,7 +89,30 @@
 			<td th:text="${todo.done=='Y'?'完了':''}"></td>
 
 		</tr>
+		
+<!--		kokokara-->
 	</table>
+	<div th:if="${todoList != null && #lists.size(todoList) !=0}">
+		<span th:text="|${todoPage.getNumber() + 1} /${todoPage.getTotalPages()} ページを表示中|">
+		</span>
+		<ul id="nav">
+			<li>
+				<span th:if="${todoPage.isFirst()}" th:text="#{todo.back}"></span>
+				<a th:unless="${todoPage.isFirst()}"
+				th:href="@{/todo/query(page = ${todoPage.getNumber() - 1})}" th:text="#{todo.back}"></a>
+			</li>
+			<li th:each="i:${#numbers.sequence(0, todoPage.getTotalPages() -1)}">
+				<span th:if="${i == todoPage.getNumber()}" th:text="${i +1}"></span>
+				<a th:if="${i != todoPage.getNumber()}"
+					th:href="@{/todo/query(page=${i})}" th:text="${i + 1}"></a>
+			</li>
+			<li>
+				<span th:if="${todoPage.isLast()}" th:text="#{todo.next}"></span>
+				<a th:unless="${todoPage.isLast()}"
+					th:href="@{/todo/query(page = (${todoPage.getNumber() + 1}))}" th:text="#{todo.next}"></a>
+			</li>
+		</ul>
+	</div>
 
 </body>
 

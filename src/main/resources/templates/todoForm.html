@@ -7,20 +7,19 @@
 
 	<link th:href="@{/css/style.css}" rel="stylesheet" type="text/css">
 </head>
-
 <body>
+
+
 	<form th:action="@{/}" method="post" th:object="${todoData}">
 		<table>
-			<!--			追加 あとで外部化できているか確認-->
 			<tr>
-				<th th:text="#{todo.id}">id</th>
+				<th th:text="#{todo.id}"></th>
 				<td>
 					<span th:text="*{id}"></span>
 					<input type="hidden" th:field="*{id}">
 				</td>
 			</tr>
 
-			<!--終了-->
 			<tr>
 				<th th:text="#{todo.title}"></th>
 				<td>
@@ -68,7 +67,6 @@
 
 
 		</table>
-		<!--		変更開始-->
 		
 		<div th:if="${session.mode == 'update'}">
 			<button type="submit" th:formaction="@{/todo/update}" th:text="#{todo.update}"></button>
@@ -78,11 +76,11 @@
 		</div>
 		
 		<div th:unless="${session.mode == 'update'}">
-			<button type="submit" th:formaction="@{/todo/create}" th:text="#{todo.touroku}"></button>
+			<button type="submit" th:formaction="@{/todo/create/do}" th:text="#{todo.touroku}"></button>
 			<button type="submit" th:formaction="@{/todo/cancel}" th:text="#{todo.cancel}"></button>
 
 		</div>
-		<!--		変更終了-->
+		
 
 	</form>
 
