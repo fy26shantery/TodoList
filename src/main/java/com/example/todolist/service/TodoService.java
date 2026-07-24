@@ -4,23 +4,40 @@ import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.util.List;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.servlet.http.HttpSession;
+
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 
+import com.example.todolist.dao.TodoDaoImpl;
 import com.example.todolist.entity.Todo;
 import com.example.todolist.form.TodoData;
 import com.example.todolist.form.TodoQuery;
 import com.example.todolist.repository.TodoRepository;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class TodoService {
 	private final TodoRepository todoRepository;
+
+	private final HttpSession session;
+
+	@PersistenceContext
+	private EntityManager entityManager;
+	TodoDaoImpl todoDaoImpl;
+
+	@PostConstruct
+	public void init() {
+		todoDaoImpl = new TodoDaoImpl(entityManager);
+	}
 
 	public boolean isValid(TodoData todoData, BindingResult result) {
 		boolean ans = true;
@@ -36,8 +53,8 @@ public class TodoService {
 				}
 			}
 			if (isAllDoubleSpace) {
-				FieldError fieldError = new FieldError(result.getObjectName(), "title", "tilte.input.error");
-				result.addError(fieldError);
+				result.rejectValue("title", "tilte.input.error"); //エラーを足す
+
 				ans = false;
 			}
 		}
@@ -51,14 +68,12 @@ public class TodoService {
 			try {
 				deadlineDate = LocalDate.parse(deadline);
 				if (deadlineDate.isBefore(tody)) {
-					FieldError fieldError = new FieldError(result.getObjectName(), "deadline",
-							"deadline.beforeset.error");
-					result.addError(fieldError);
+					result.rejectValue("deadline", "deadline.beforeset.error"); //エラーを足す
 					ans = false;
+
 				}
 			} catch (DateTimeException e) {
-				FieldError fieldError = new FieldError(result.getObjectName(), "deadline", "deadline.format.error");
-				result.addError(fieldError);
+				result.rejectValue("deadline", "deadline.format.error"); //エラーを足す
 				ans = false;
 			}
 		}
@@ -68,7 +83,6 @@ public class TodoService {
 	//update用のエラーチェック（期限過去は考慮しない）
 	public boolean isValidForUpdate(TodoData todoData, BindingResult result) {
 		boolean ans = true;
-
 		//期限のフォーマットが誤っていたらエラー
 		String deadline = todoData.getDeadline();
 		if (!deadline.equals("")) {
@@ -76,8 +90,8 @@ public class TodoService {
 				LocalDate.parse(deadline);
 
 			} catch (DateTimeException e) {
-				FieldError fieldError = new FieldError(result.getObjectName(), "deadline", "deadline.format.error");
-				result.addError(fieldError);
+				result.rejectValue("deadline", "deadline.format.error"); //エラーを足す
+
 				ans = false;
 			}
 		}
@@ -88,29 +102,45 @@ public class TodoService {
 		boolean ans = true;
 
 		//期限:開始の形式をチェック
-		String date = todoQuery.getDeadlineFrom();
-		if (!date.equals("")) {
+		String dateFrom = todoQuery.getDeadlineFrom();
+		if (!dateFrom.equals("")) {
 			try {
-				LocalDate.parse(date);
+				LocalDate.parse(dateFrom);
 			} catch (DateTimeException e) {
 				//parseできない場合
-				result.rejectValue("deadlineFrom", date); //エラーを足す
+				result.rejectValue("deadlineFrom", "deadline.format.error"); //エラーを足す
 				ans = false;
 
 			}
 		}
 
 		//期限:終了の形式をチェック
-		date = todoQuery.getDeadlineTo();
-		if (!date.equals("")) {
+		String dateTo = todoQuery.getDeadlineTo();
+		if (!dateTo.equals("")) {
 			try {
-				LocalDate.parse(date);
+				LocalDate.parse(dateTo);
 			} catch (DateTimeException e) {
 				//parseできない場合
-				result.rejectValue("deadlineTo", date); //エラーを足す
+				result.rejectValue("deadlineTo", "deadline.format.error"); //エラーを足す
 				ans = false;
 
 			}
+
+			//開始が終了よりも以前であることをチェック
+			if (!dateFrom.equals("") && !dateTo.equals("") && ans == true) {
+
+				LocalDate dateFromDate = LocalDate.parse(dateFrom);
+				LocalDate dateToDate = LocalDate.parse(dateTo);
+
+				//開始が終了よりも後の場合
+				if (dateFromDate.isAfter(dateToDate)) {
+					result.reject("dateReverse", "deadline.reverse.error");
+					ans = false;
+
+				}
+
+			}
+
 		}
 		return ans;
 	}
@@ -181,6 +211,47 @@ public class TodoService {
 			//現在ページより後ろに１ページしかない場合
 			md.addAttribute("endPage", currentPage + 1);
 		}
+	}
+
+	//searchからの検索メソッド
+	@SuppressWarnings("unchecked")
+	public void dealQuery(TodoQuery todoQuery, BindingResult result,
+			Pageable pageable, Model md) {
+		Page<Todo> todoPage = null;
+		if (isValid(todoQuery, result)) {
+			//エラーがなければ検索
+			todoPage = todoDaoImpl.findByJPQL(todoQuery, pageable);
+
+			session.setAttribute("todoQuery", todoQuery);
+
+			constitutePage(todoPage, md); //ページング数の指定
+			md.addAttribute("todoPage", todoPage);
+			md.addAttribute("todoList", todoPage.getContent());
+
+		} else {
+
+			//検索不能のため、前画面の情報をもらう
+			todoPage = (Page<Todo>) session.getAttribute("todoPage");
+			md.addAttribute("todoPage", todoPage);
+			md.addAttribute("todoList", session.getAttribute("todoList"));
+			constitutePage(todoPage, md);
+
+		}
+		session.setAttribute("useSearch", 1); //検索フラグを立てる
+
+	}
+
+	//ページリンク先の表示リスト構築
+	public void dealQuery(Pageable pageable, Model md) {
+		//sessionに保存されている情報で検索
+		TodoQuery todoQuery = (TodoQuery) session.getAttribute("todoQuery");
+		Page<Todo> todoPage = todoDaoImpl.findByJPQL(todoQuery, pageable);
+
+		constitutePage(todoPage, md); //ページング数の指定
+		md.addAttribute("todoQuery", todoQuery);
+		md.addAttribute("todoPage", todoPage);
+		md.addAttribute("todoList", todoPage.getContent());
+
 	}
 
 }

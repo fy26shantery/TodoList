@@ -41,3 +41,59 @@ button{
 #nav li{
 	margin-right: 10px;
 }
+
+/* 親のチェックは画面上でたらめな位置にくるので非表示 */
+.all-delete-operate{
+	display: none;
+}
+
+/* 初期値でcheckedなチェックボックスは最初非表示に */
+.delete-check{
+	display: none;
+}
+
+/* 画面上のチェックボックスとラベルを結ぶ */
+.delete-check-connect{
+	pointer-events: none;
+}
+
+
+
+/* 全削除にチェックが入る時 */
+.all-delete-operate:checked ~ table td:has(.delete-check:checked) .delete-check {
+	display: block !important;
+}
+.all-delete-operate:checked ~ table td:has(.delete-check:checked) .non-delete-check {
+	display: none !important;
+}
+
+/* 下位チェックが入ったときはチェックがないものを出す */
+.all-delete-operate:checked ~ table td:has(.delete-check:not(:checked)) .non-delete-check {
+	display: block !important;
+}
+.all-delete-operate:checked ~ table td:has(.delete-check:not(:checked)) .delete-check {
+	display: none !important;
+}
+
+
+
+
+
+/* 全削除からチェックが外されるとき */
+.all-delete-operate:not(:checked) ~ table td:has(.non-delete-check:not(:checked)) .non-delete-check {
+	display: block !important;
+}
+.all-delete-operate:not(:checked) ~ table td:has(.non-delete-check:not(:checked)) .delete-check {
+	display: none !important;
+}
+
+/* 下位チェックが入ったときはチェックが入ったものを出す */
+.all-delete-operate:not(:checked) ~ table td:has(.non-delete-check:checked) .delete-check {
+	display: block !important;
+}
+.all-delete-operate:not(:checked) ~ table td:has(.non-delete-check:checked) .non-delete-check {
+	display: none !important;
+}
+
+
+

@@ -1,5 +1,6 @@
 package com.example.todolist.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.annotation.PostConstruct;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.todolist.dao.TodoDaoImpl;
 import com.example.todolist.entity.Todo;
@@ -65,6 +67,10 @@ public class TodolistController {
 		md.addAttribute("todoPage", todoPage);
 		md.addAttribute("todoList", todoPage.getContent());
 		session.setAttribute("todoQuery", new TodoQuery());
+		session.setAttribute("todoPage", todoPage);
+		session.setAttribute("todoList", todoPage.getContent());
+
+		session.setAttribute("useSearch", 0); //検索フラグの初期化
 
 		return "todoList";
 	}
@@ -88,7 +94,6 @@ public class TodolistController {
 		boolean isValid = todoService.isValid(todoData, result);
 		if (!result.hasErrors() && isValid) {
 			//エラーなし
-			//session.setAttribute("currentPage", currentPage); //create遷移前のtodoListのページを渡す
 			Todo todo = todoData.toEntity();
 			todoRepository.saveAndFlush(todo);
 			return "redirect:/todo";
@@ -102,7 +107,6 @@ public class TodolistController {
 	//[処理3]Todo入力画面でキャンセル登録がクリックされたとき
 	@PostMapping("/todo/cancel")
 	public String cancel() {
-		//session.setAttribute("currentPage", currentPage); //create遷移前のtodoListのページを渡す
 		return "redirect:/todo";
 	}
 
@@ -133,15 +137,94 @@ public class TodolistController {
 
 	}
 
+	//全選択
+	@GetMapping("/todo/delete/select/{currentPage}")
+	public String selectDeleteData(@RequestParam(required = false) List<Integer> currentIdList,
+			@PageableDefault(page = 0, size = 5, sort = "id") org.springframework.data.domain.Pageable pageable,
+			Model md,
+			@PathVariable int currentPage, RedirectAttributes redirectAttributes) {
+		List<Integer> deleteIdList = new ArrayList<>();
+		if (currentIdList != null) {
+			for (int id : currentIdList) { //表示されているid全てを回収
+
+				deleteIdList.add(id);
+			}
+
+		} else { //nullの場合
+			deleteIdList = List.of();
+
+		}
+
+		Integer searchFlag = (Integer) session.getAttribute("useSearch");
+
+		//検索機能をつかっているかどうか
+		if (searchFlag != null && (Integer) searchFlag != 0) {
+			if ((Integer) currentPage != null) {
+				pageable = pageable.withPage(currentPage);
+
+			}
+			md.addAttribute("selectList", deleteIdList);
+			todoService.dealQuery(pageable, md);
+
+			return "todoList";
+		} else { //検索を使っていない場合
+			session.setAttribute("currentPage", currentPage); //今のtodoListのページを渡す
+			redirectAttributes.addFlashAttribute("selectList", deleteIdList); //htmlに渡してチェックをつける
+			return "redirect:/todo";
+		}
+
+	}
+
+	//全解除
+	@GetMapping("/todo/delete/noselect/{currentPage}")
+	public String selectDeleteNoData(@RequestParam(required = false) List<Integer> currentIdList,
+			@PageableDefault(page = 0, size = 5, sort = "id") org.springframework.data.domain.Pageable pageable,
+			Model md,
+			@PathVariable int currentPage, RedirectAttributes redirectAttributes) {
+		List<Integer> deleteIdList = new ArrayList<>();
+		if (currentIdList != null) {
+			int size = currentIdList.size();
+			for (int i = 0; i < size; i++) { //表示されているid分を回収
+
+				deleteIdList.add(0); //どのidとも一致しない0をいれる
+			}
+
+		} else { //nullの場合
+			deleteIdList = List.of();
+
+		}
+
+		Integer searchFlag = (Integer) session.getAttribute("useSearch");
+		//検索機能をつかっているかどうか
+		if (searchFlag != null && (Integer) searchFlag != 0) {
+			if ((Integer) currentPage != null) {
+				pageable = pageable.withPage(currentPage);
+
+			}
+			md.addAttribute("selectList", deleteIdList);
+			todoService.dealQuery(pageable, md);
+
+			return "todoList";
+		} else { //検索を使っていない場合
+			redirectAttributes.addFlashAttribute("selectList", deleteIdList); //htmlに渡してチェックをつける
+			session.setAttribute("currentPage", currentPage); //今のtodoListのページを渡す
+			return "redirect:/todo";
+		}
+	}
+
 	//チェックボックスを用いての一括削除
 	@PostMapping("/todo/delete/check")
 	//複数送られてくる可能性があるのでList
-	public String deleteTodo(@RequestParam(required = false) List<Integer> idList) {//required=falseでnull落ちを防ぐ
+	public String deleteTodo(@RequestParam(required = false) List<Integer> idList,
+			RedirectAttributes redirectAttributes) {//required=falseでnull落ちを防ぐ
 		if (idList != null) {
 			for (int id : idList) {
 
 				todoRepository.deleteById(id);
 			}
+		} else {
+			//データベースに関係のない値なのでBindingResultは使わない
+			redirectAttributes.addFlashAttribute("deleteCheckNull", "deleteCheckNull");
 		}
 
 		return "redirect:/todo";
@@ -153,43 +236,24 @@ public class TodolistController {
 		return "redirect:/todo";
 	}
 
+	//todoList上部"検索"実行時
 	@PostMapping("/todo/query")
 	public String queryTodo(@ModelAttribute TodoQuery todoQuery,
 			BindingResult result,
 			@PageableDefault(page = 0, size = 5) org.springframework.data.domain.Pageable pageable,
 			Model md) {
 
-		Page<Todo> todoPage = null;
-		if (todoService.isValid(todoQuery, result)) {
-			//エラーがなければ検索
-			todoPage = todoDaoImpl.findByJPQL(todoQuery, pageable);
+		todoService.dealQuery(todoQuery, result, pageable, md);
 
-			session.setAttribute("todoQuery", todoQuery);
-
-			todoService.constitutePage(todoPage, md); //ページング数の指定
-			md.addAttribute("todoPage", todoPage);
-			md.addAttribute("todoList", todoPage.getContent());
-		} else {
-
-			md.addAttribute("todoPage", null);
-			md.addAttribute("todoList", null);
-
-		}
 		return "todoList";
 	}
 
+	//ページリンクでの遷移時
 	@GetMapping("/todo/query")
 	public String queryTodo(@PageableDefault(page = 0, size = 5) Pageable pageable,
 			Model md) {
 
-		//sessionに保存されている情報で検索
-		TodoQuery todoQuery = (TodoQuery) session.getAttribute("todoQuery");
-		Page<Todo> todoPage = todoDaoImpl.findByJPQL(todoQuery, pageable);
-
-		todoService.constitutePage(todoPage, md); //ページング数の指定
-		md.addAttribute("todoQuery", todoQuery);
-		md.addAttribute("todoPage", todoPage);
-		md.addAttribute("todoList", todoPage.getContent());
+		todoService.dealQuery(pageable, md);
 
 		return "todoList";
 

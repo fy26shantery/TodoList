@@ -9,10 +9,11 @@
 
 <body>
 	<form th:action="@{/}" method="post" th:object="${todoQuery}">
+
 		<div style="display: flex">
 			<table border="1">
 				<tr>
-					
+
 					<th th:text="#{html.head_title}"></th>
 					<th th:text="#{html.head_importance}"></th>
 					<th th:text="#{html.head_urgency}"></th>
@@ -25,9 +26,9 @@
 					</td>
 					<td>
 						<select name="importance">
-						<option value="-1" th:field="*{importance}" th:text="#{importance.empty}"></option>
-						<option value="1" th:field="*{importance}" th:text="#{importance.high}"></option>
-						<option value="0" th:field="*{importance}" th:text="#{importance.low}"></option>
+							<option value="-1" th:field="*{importance}" th:text="#{importance.empty}"></option>
+							<option value="1" th:field="*{importance}" th:text="#{importance.high}"></option>
+							<option value="0" th:field="*{importance}" th:text="#{importance.low}"></option>
 						</select>
 					</td>
 
@@ -48,62 +49,80 @@
 
 					</td>
 
-					
+
 					<td>
 						<input type="checkbox" value="Y" th:field="*{done}" th:text="#{finished}">
 					</td>
-					</tr>
-				</table>
-				<button type="submit" th:formaction="@{/todo/query}" th:text="#{search}"></button>
+				</tr>
+			</table>
+			<button type="submit" th:formaction="@{/todo/query}" th:text="#{search}"></button>
 		</div>
 		<div th:if="${#fields.hasErrors('deadlineFrom')}" th:errors="*{deadlineFrom}" th:errorclass="red"></div>
 		<div th:if="${#fields.hasErrors('deadlineTo')}" th:errors="*{deadlineTo}" th:errorclass="red"></div>
+		<div th:if="${deleteCheckNull}" th:text="#{deleteCheckNull}" class="red"></div>
+		<div th:each="err : ${#fields.detailedErrors()}" th:if="${err.code == 'dateReverse'}">
+		    <span th:text="#{deadline.reverse.error}" class="red"></span>
+		</div>
+
 		<hr>
-<!--		現在のページ番号を渡す-->
-		
-		<button type="submit" th:formaction="@{/todo/create/__${todoPage.getNumber()}__}" th:formmethod="get" th:text="#{newregist}"></button>
-		<button type="submit" th:formaction="@{/todo/delete/check}"  th:text="#{deletes}"></button>
-	
-	
-	<table border="1">
-		<tr>
-			<th th;text="#{html.head_delete}"></th>
-			<th th:text="#{html.head_Id}"></th>
-			<th th:text="#{html.head_title}"></th>
-			<th th:text="#{html.head_importance}"></th>
-			<th th:text="#{html.head_urgency}"></th>
-			<th th:text="#{html.head_deadline}"></th>
-			<th th:text="#{html.head_finish}"></th>
-		</tr>
-		<tr th:each="todo:${todoList}">
-<!--			削除したいデータを決定するチェックボックス-->
-			<td>
-				<input type="checkbox"  name="idList" th:value="${todo.id}">
-			</td>
-			<td th:text="${todo.id}"></td>
-			<td><a th:href="@{/todo/__${todo.id}__/__${todoPage.getNumber()}__}" th:text="${todo.title}"></td>
-			<td th:text="${todo.importance == 1} ? #{value.triplestar}:#{value.singlestar}"></td>
-			<td th:text="${todo.urgency == 1} ? #{value.triplestar}:#{value.singlestar}"></td>
-			<td th:text="${todo.deadline}"></td>
-			<td th:text="${todo.done == 'Y' ? '完了':''}"></td>
-		</tr>
-	</table>
+		<!--		現在のページ番号を渡す-->
+
+		<button type="submit" th:formaction="@{/todo/create/__${todoPage.getNumber()}__}" th:formmethod="get"
+			th:text="#{newregist}"></button>
+		<button type="submit" th:formaction="@{/todo/delete/select/__${todoPage.getNumber()}__}" th:formmethod="get" th:text="#{allSelect}"></button>
+		<button type="submit" th:formaction="@{/todo/delete/noselect/__${todoPage.getNumber()}__}" th:text="#{noSelect}" th:formmethod="get"></button>
+		<button type="submit" th:formaction="@{/todo/delete/check}" th:text="#{deletes}"></button>
+
+		<table border="1">
+			<tr>
+				<th>
+
+
+
+				</th>
+				<th th:text="#{html.head_Id}"></th>
+				<th th:text="#{html.head_title}"></th>
+				<th th:text="#{html.head_importance}"></th>
+				<th th:text="#{html.head_urgency}"></th>
+				<th th:text="#{html.head_deadline}"></th>
+				<th th:text="#{html.head_finish}"></th>
+			</tr>
+			<tr th:each="todo:${todoList}">
+				<!--			削除したいデータを決定するチェックボックス-->
+
+				<td>
+					<input type="checkbox" name="idList" th:value="${todo.id}"
+						th:checked="${#lists.contains(selectList ?: {}, todo.id)}">
+
+					<!-- 全選択・全解除用のパラメータ-->
+
+					<input type="hidden" name="currentIdList" th:value="${todo.id}">
+				</td>
+				<td th:text="${todo.id}"></td>
+				<td><a th:href="@{/todo/__${todo.id}__/__${todoPage.getNumber()}__}" th:text="${todo.title}"></td>
+				<td th:text="${todo.importance == 1} ? #{value.triplestar}:#{value.singlestar}"></td>
+				<td th:text="${todo.urgency == 1} ? #{value.triplestar}:#{value.singlestar}"></td>
+				<td th:text="${todo.deadline}"></td>
+				<td th:text="${todo.done == 'Y' ? '完了':''}"></td>
+			</tr>
+		</table>
 	</form>
 	<div th:if="${todoList != null && #lists.size(todoList) != 0}">
 		<span th:text="|${todoPage.getNumber() + 1}/${todoPage.getTotalPages()}#{page.current}|"></span>
 		<ui id="nav">
 			<li>
 				<span th:if="${todoPage.isFirst()}" th:text="#{page.backward}"></span>
-				<a th:unless="${todoPage.isFirst()}" th:href="@{/todo/query(page = ${todoPage.getNumber() - 1})}" th:text="#{page.backward}" ></a>
+				<a th:unless="${todoPage.isFirst()}" th:href="@{/todo/query(page = ${todoPage.getNumber() - 1})}"
+					th:text="#{page.backward}"></a>
 			</li>
 			<li th:each="i:${#numbers.sequence(startPage,endPage)}">
-			<span th:if="${i == todoPage.getNumber()}" th:text="${i + 1}"></span>
-			<a th:if="${i != todoPage.getNumber()}" th:href="@{/todo/query(page=${i})}"
-			th:text="${i + 1}"></a>
+				<span th:if="${i == todoPage.getNumber()}" th:text="${i + 1}"></span>
+				<a th:if="${i != todoPage.getNumber()}" th:href="@{/todo/query(page=${i})}" th:text="${i + 1}"></a>
 			</li>
 			<li>
 				<span th:if="${todoPage.isLast()}" th:text="#{page.forward}"></span>
-				<a th:unless="${todoPage.isLast()}" th:href="@{/todo/query(page = (${todoPage.getNumber()+1}))}" th:text="#{page.forward}"></a>
+				<a th:unless="${todoPage.isLast()}" th:href="@{/todo/query(page = (${todoPage.getNumber()+1}))}"
+					th:text="#{page.forward}"></a>
 			</li>
 		</ui>
 	</div>
