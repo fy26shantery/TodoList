@@ -16,6 +16,7 @@
 					<th th:text=#{m.deadline}></th>
 					<th th:text=#{m.done}></th>
 				</tr>
+			
 				<tr>
 					<td>
 						<input type="text" name="title" size="40" th:value="*{title}">
@@ -50,9 +51,11 @@
 		<div th:if="${#fields.hasErrors('deadlineTo')}" th:errors="*{deadlineTo}" th:errorclass="red"></div>
 		<hr>
 		<button type="submit"  th:formaction="@{/todo/create/form}" th:text=#{newregist}></button>
-	</form>
+		<button type="submit" th:formaction="@{/todo/deleteselection(page=${todoPage.number})}" th:text=#{select.Delete}></button>
+	
 	<table border="1">
 		<tr>
+			<th th:text=#{m.check}></th>
 			<th th:text=#{m.id}></th>
 			<th th:text=#{m.title}></th>
 			<th th:text=#{m.importance}></th>
@@ -61,14 +64,16 @@
 			<th th:text=#{m.done}></th>
 		</tr>
 		<tr th:each="todo:${todoList}">
+			<td><input type="checkbox" name="checkDelete" th:value="${todo.id}"></td>
 			<td th:text="${todo.id}"></td>
-			<td><a th:href="@{/todo/__${todo.id}__}" th:text="${todo.title}"></a></td>
-			<td th:text="${todo.importance == 1 ? '★★★':'★'}"></td>
-			<td th:text="${todo.urgency == 1 ? '★★★':'★'}"></td>
+			<td><a th:href="@{/todo/__${todo.id}__(page=${todoPage.number})}" th:text="${todo.title}"></a></td>
+			<td th:text="${todo.importance == 1} ? #{m.threeStar}:#{m.oneStar}"></td>
+			<td th:text="${todo.urgency == 1} ? #{m.threeStar}:#{m.oneStar}"></td>
 			<td th:text="${todo.deadline}"></td>
 			<td th:text="${todo.done == 'Y' ? '完了':''}"></td>
 		</tr>
 	</table>
+	</form>
 	<div th:if="${todoList != null && #lists.size(todoList) != 0}">
 		<span th:text="|${todoPage.getNumber()+1}/${todoPage.getTotalPages()}ページを表示中|">
 		</span>
@@ -78,11 +83,14 @@
 				<a th:unless="${todoPage.isFirst()}"
 					th:href="@{/todo/query(page=${todoPage.getNumber()-1})}"  th:text=#{before}></a>
 			</li>
-			<li th:each="i:${#numbers.sequence(0,todoPage.getTotalPages()-1)}">
+			
+			<li th:each="i:${#numbers.sequence(0,todoPage.getTotalPages()-1)}"
+				th:if="${i >=todoPage.getNumber()-2 and i <= todoPage.getNumber()+2}">
 				<span th:if="${i==todoPage.getNumber()}"th:text="${i+1}"></span>
 					<a th:if="${i != todoPage.getNumber()}"
 						th:href="@{/todo/query(page=${i})}" th:text="${i+1}"></a>
 			</li>
+			
 			<li>
 				<span th:if="${todoPage.isLast()}"  th:text=#{after}></span>
 				<a th:unless="${todoPage.isLast()}"

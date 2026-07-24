@@ -36,7 +36,13 @@ public class TodoService {
 				}
 			}
 			if (isAllDoubleSpace) {
-				FieldError fieldError = new FieldError(result.getObjectName(), "title", "件名が全角スペースです");
+				FieldError fieldError = new FieldError(result.getObjectName(),
+						"title",
+						null,
+						true,
+						new String[] { "service.titleError" },
+						null,
+						null);
 				result.addError(fieldError);
 				ans = false;
 			}
@@ -50,13 +56,24 @@ public class TodoService {
 			try {
 				deadlineDate = LocalDate.parse(deadline);
 				if (deadlineDate.isBefore(tody)) {
-					FieldError fieldError = new FieldError(result.getObjectName(), "deadline", "期限を設定するときは今日以降にしてください");
+					FieldError fieldError = new FieldError(result.getObjectName(),
+							"deadline",
+							null,
+							true,
+							new String[] { "service.deadlineError" },
+							null,
+							null);
 					result.addError(fieldError);
 					ans = false;
 				}
 			} catch (DateTimeException e) {
-				FieldError fieldError = new FieldError(result.getObjectName(), "deadline",
-						"期限を設定するときはyyyy-mm-dd形式で入力してください");
+				FieldError fieldError = new FieldError(result.getObjectName(),
+						"deadline",
+						null,
+						true,
+						new String[] { "service.deadlineFormError" },
+						null,
+						null);
 				result.addError(fieldError);
 				ans = false;
 			}
@@ -67,15 +84,23 @@ public class TodoService {
 
 	public boolean isValid(TodoQuery todoQuery, BindingResult result) {
 		boolean ans = true;
+		boolean isFromValid = false;
+		boolean isToValid = false;
 		//リスト9-5期限、開始の形式をチェック
-		String date = todoQuery.getDeadlineFrom();
-		if (!date.equals("")) {
+		String dateFrom = todoQuery.getDeadlineFrom();
+		if (!dateFrom.equals("")) {
 			try {
-				LocalDate.parse(date);
+				LocalDate.parse(dateFrom);
+				isFromValid = true;
 			} catch (DateTimeException e) {
 				// parseできない場合
-				FieldError fieldError = new FieldError(result.getObjectName(), "deadlineFrom",
-						"期限:開始を設定するときはyyyy-mm-dd形式で入力してください");
+				FieldError fieldError = new FieldError(result.getObjectName(),
+						"deadlineFrom",
+						null,
+						true,
+						new String[] { "service.deadlineFromError" },
+						null,
+						null);
 				result.addError(fieldError);
 				ans = false;
 			}
@@ -83,13 +108,53 @@ public class TodoService {
 		}
 
 		//期限：終了の形式チェック
-		if (!date.equals("")) {
+		String dateTo = todoQuery.getDeadlineTo();
+		if (!dateTo.equals("")) {
 			try {
-				LocalDate.parse(date);
+				LocalDate.parse(dateTo);
+				isToValid = true;
 			} catch (DateTimeException e) {
 				// parseできない場合
-				FieldError fieldError = new FieldError(result.getObjectName(), "deadlineTo",
-						"期限:終了を設定するときはyyyy-mm-dd形式で入力してください");
+				FieldError fieldError = new FieldError(result.getObjectName(),
+						"deadlineTo",
+						null,
+						true,
+						new String[] { "service.deadlineToError" },
+						null,
+						null);
+				result.addError(fieldError);
+				ans = false;
+			}
+
+		}
+
+		//開始日より終了日が未来の時のチェック
+		if (isFromValid && isToValid) {
+
+			try {
+				LocalDate fromDate = LocalDate.parse(dateFrom);
+				LocalDate toDate = LocalDate.parse(dateTo);
+
+				if (fromDate.isAfter(toDate)) {
+					FieldError fieldError = new FieldError(result.getObjectName(),
+							"deadlineFrom",
+							null,
+							true,
+							new String[] { "service.deadline.chronology" },
+							null,
+							null);
+					result.addError(fieldError);
+					ans = false;
+				}
+			} catch (Exception e) {
+				//日付の変換に失敗
+				FieldError fieldError = new FieldError(result.getObjectName(),
+						"deadlineFrom",
+						null,
+						true,
+						new String[] { "service.deadlineError" },
+						null,
+						null);
 				result.addError(fieldError);
 				ans = false;
 			}
@@ -133,6 +198,31 @@ public class TodoService {
 
 		}
 		return todoList;
+
+	}
+
+	//日付の形式のみのチェック
+	public boolean formatCheck(TodoData todoData, BindingResult result) {
+		boolean ans = true;
+
+		String deadline = todoData.getDeadline();
+		LocalDate deadlineDate = null;
+		try {
+			deadlineDate = LocalDate.parse(deadline);
+
+		} catch (DateTimeException e) {
+			FieldError fieldError = new FieldError(result.getObjectName(),
+					"deadline",
+					null,
+					true,
+					new String[] { "service.deadlineFormError" },
+					null,
+					null);
+			result.addError(fieldError);
+			ans = false;
+		}
+
+		return ans;
 
 	}
 

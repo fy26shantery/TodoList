@@ -1,5 +1,7 @@
 package com.example.todolist.controller;
 
+import java.util.List;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.example.todolist.dao.TodoDaoImpl;
 import com.example.todolist.entity.Todo;
@@ -35,7 +38,7 @@ public class TodoListController {
 	private final HttpSession session;
 
 	//list5で追加
-	@PersistenceContext
+	@PersistenceContext //Entityを自動的にインジェクションするためのアノテーション
 	private EntityManager entityManager;
 	TodoDaoImpl todoDaoImpl;
 
@@ -47,11 +50,12 @@ public class TodoListController {
 	//Todo一覧表示(Todolistで追加)
 	@GetMapping("/todo")
 	public String showTodoList(Model m, @PageableDefault(page = 0, size = 5, sort = "id") Pageable pageable) {
-		//		Page<Todo> todoList = todoRepository.findAll(pageable);
+
 		Page<Todo> todoPage = todoRepository.findAll(pageable);
 		m.addAttribute("todoQuery", new TodoQuery());
 		m.addAttribute("todoPage", todoPage);
 		m.addAttribute("todoList", todoPage.getContent());
+
 		session.setAttribute("todoQuery", new TodoQuery());
 
 		return "todoList";
@@ -64,6 +68,20 @@ public class TodoListController {
 		m.addAttribute("todoData", new TodoData());
 		session.setAttribute("mode", "create");
 		return "todoForm";
+	}
+
+	//★入力フォーム表示
+	//【処理】Todo一覧画面(todoList.html)で選択したもののみ削除
+	@PostMapping("/todo/deleteselection")
+	public String deleteSelectionTodo(@ModelAttribute TodoData todoData,
+			@RequestParam(name = "page", defaultValue = "0") int page,
+			@RequestParam(name = "checkDelete", required = false, defaultValue = "0") List<Integer> deleteList) {
+
+		for (int i : deleteList) {
+			todoRepository.deleteById(i);
+		}
+
+		return "redirect:/todo?page=" + page;
 	}
 
 	//Todo追加処理(Todolist2で追加)
@@ -81,6 +99,7 @@ public class TodoListController {
 
 		} else {
 			//エラーあり
+			m.addAttribute("todoData", todoData);
 			return "todoForm";
 		}
 		//		m.addAttribute("todoList", new TodoDate());
@@ -90,8 +109,8 @@ public class TodoListController {
 	//Todo一覧へ戻る(Todolist2で追加)
 	//【処理3】Todo入力画面(todoList.html)でキャンセル登録ボタンがクリックされたとき
 	@PostMapping("/todo/cancel")
-	public String cancel() {
-		return "redirect:/todo";
+	public String cancel(@RequestParam(name = "page", defaultValue = "0") int page) {
+		return "redirect:/todo?page=" + page;
 	}
 
 	//主キーで検索する
@@ -106,30 +125,34 @@ public class TodoListController {
 
 	//更新ボタン押したとき
 	@PostMapping("/todo/update")
-	public String updateTodo(@ModelAttribute @Validated TodoData todoData, BindingResult result, Model m) {
+	public String updateTodo(@ModelAttribute @Validated TodoData todoData, BindingResult result, Model m,
+			@RequestParam(name = "page", defaultValue = "0") int page) {
 
 		//エラーチェック
-		boolean isValid = todoService.isValid(todoData, result);
+		boolean isValid = todoService.formatCheck(todoData, result);
 		if (!result.hasErrors() && isValid) {
 			//エラーなし
 			Todo todo = todoData.toEntity();
 			todoRepository.saveAndFlush(todo);
-			return "redirect:/todo";
+			return "redirect:/todo?page=" + page;
 
 		} else {
 			//エラーあり
+			m.addAttribute("page", page);
 			return "todoForm";
 		}
 
 	}
 
-	//キャンセルボタン
+	//削除ボタン
 	@PostMapping("/todo/delete")
-	public String deleteTodo(@ModelAttribute TodoData todoData) {
+	public String deleteTodo(@ModelAttribute TodoData todoData,
+			@RequestParam(name = "page", defaultValue = "0") int page) {
 		todoRepository.deleteById(todoData.getId());
-		return "redirect:/todo";
+		return "redirect:/todo?page=" + page;
 	}
 
+	//検索
 	@PostMapping("/todo/query")
 	public String queryTodo(@ModelAttribute TodoQuery todoQuery, BindingResult result,
 			@PageableDefault(page = 0, size = 5) Pageable pageable, Model m) {
