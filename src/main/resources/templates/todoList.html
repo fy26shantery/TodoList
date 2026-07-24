@@ -77,7 +77,7 @@
 
 	<!-- ToDoテーブル -->
 	<form id="deleteForm" th:action="@{/todo/deleteList}" method="post">
-		<!-- 追加：現在のページ番号をサーバーに伝えるため -->
+		<!-- 全選択、全解除ボタンを押したときに現在のページ番号をサーバーに伝えるため -->
 		<input type="hidden" name="page" th:if="${todoPage != null}" th:value="${todoPage.getNumber()}">
 
 		<table border="1">
@@ -91,9 +91,10 @@
 				<th th:text="#{label.done}">完了</th>
 			</tr>
 			<tr th:each="todo:${todoList}">
-				<!-- th:checked を追加し、サーバーからの選択状態（checkedIds）を反映する -->
+				<!--サーバーからのcheckedIdsを反映する -->
 				<td><input type="checkbox" name="deleteIds" th:value="${todo.id}" class="todo-checkbox"
 						th:checked="${checkedIds != null and #lists.contains(checkedIds, todo.id)}"></td>
+<!--						チェックするIDのリストのなかにToDoのIDがあったらチェックを付ける-->
 				<td th:text="${todo.id}"></td>
 				<td>
 					<a th:href="@{/todo/__${todo.id}__}" th:text="${todo.title}"></a>

@@ -14,10 +14,12 @@ import lombok.Data;
 
 @Data
 //画面から送られてきた入力値を保管する箱があるクラス
-//エンティティにこの箱を用意しないのは、DBと画面入力は型が一致するとは限らないから
+//エンティティにこの箱を作らないのは、DBと画面入力は型が一致するとは限らないから
+//DBはDate型やInteger型を求めてる
 public class TodoData {
 	private Integer id;
 
+	//エラー対象の入力値がコントローラーに届く前に弾く
 	@NotBlank
 	private String title;
 

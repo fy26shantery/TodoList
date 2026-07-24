@@ -39,14 +39,18 @@ public class TodoListController {
 	public String showTodoList(Model model,
 			@PageableDefault(page = 0, size = 5, sort = "id") Pageable pageable,
 			@RequestParam(name = "selectAll", defaultValue = "false") boolean selectAll) {
+		//URLにページ番号がないときは０（実際は１）ページ目、１ページに５件ずつ表示、id順という初期設定をpageableに入れてる
+
 		Page<Todo> todoPage = todoRepository.findAll(pageable);
 		model.addAttribute("todoQuery", new TodoQuery());
 		model.addAttribute("todoPage", todoPage);
 		model.addAttribute("todoList", todoPage.getContent());
 		model.addAttribute("selectAll", selectAll);
+		//ページリンクをクリックした時、画面遷移後に検索条件を覚えておくため
 		session.setAttribute("todoQuery", new TodoQuery());
 		// 戻り先URLを保存
 		session.setAttribute("returnUrl", "/todo?page=" + pageable.getPageNumber());
+
 		setPageInfo(model, todoPage);
 		return "todoList";
 	}
@@ -188,39 +192,45 @@ public class TodoListController {
 	@PostMapping("/todo/deleteList")
 	public String deleteTodoList(@RequestParam(name = "deleteIds", required = false) List<Integer> deleteIds,
 			RedirectAttributes redirectAttributes) {
-		// チェックボックスが1つも選択されずに送信された場合はfalseで、nullを代入して、処理続行
+		// チェックボックスが何も選択されずに送信された場合はfalseで、nullを代入して、処理続行
 		if (deleteIds != null && !deleteIds.isEmpty()) {
 			todoRepository.deleteAllById(deleteIds);
 		} else {
-			//何も選択されていない場合はエラーフラグを持たせてリダイレクト
+			//何も選択されていない場合はエラーフラグを立ててリダイレクト
+			//戻った直後の一回だけエラーメッセージを引き継ぐ
 			redirectAttributes.addFlashAttribute("deleteError", true);
 		}
 
-		// 削除（またはエラー処理）後は、セッションに保存しておいた元のページ番号、検索条件のURLへ戻る
+		// 削除後やエラー時は、セッションに保存しておいた元のページ番号、検索条件のURLへ戻る
 		return getReturnUrl();
 	}
 
-	//全選択ボタンが押された時の処理
+	//全選択ボタンが押された時
 	@PostMapping("/todo/selectAll")
 	public String selectAll(@PageableDefault(page = 0, size = 5) Pageable pageable,
 			RedirectAttributes redirectAttributes) {
 		TodoQuery todoQuery = (TodoQuery) session.getAttribute("todoQuery");
+		//セッションから検索条件を取り出す
 		if (todoQuery == null) {
 			todoQuery = new TodoQuery();
 		}
-		// 現在のページのToDoリストを取得
+		// 現在のページのToDoリストをDBから取得し直す
 		Page<Todo> todoPage = todoDao.findByJPQL(todoQuery, pageable);
-		// 表示されているIDをすべて抽出し、チェック済みIDとして画面に渡す
+		//Stream APIでIDの数値だけをTodoクラスのgetId()で抜き出して.map()でリストに変換する
+		// 表示されているIDをすべて取得し、チェック済みIDとして画面に渡す
 		List<Integer> checkedIds = todoPage.getContent().stream().map(Todo::getId).toList();
 
+		//画面にチェックを付けてほしいIDを教えてリダイレクト
+		//HTMLからhiddenで送られてきたページ番号とセッションに保存していた検索条件から画面に表示されているはずのIDのリストを復活させてる
 		redirectAttributes.addFlashAttribute("checkedIds", checkedIds);
 		return getReturnUrl();
 	}
 
-	//全解除ボタンが押された時の処理
+	//全解除ボタンが押された時
 	@PostMapping("/todo/deselectAll")
 	public String deselectAll(RedirectAttributes redirectAttributes) {
 		// 空のリストを渡して全てのチェックを外す
+		//HTMLのリストの中身の判定で一致するものがなにも無いから
 		redirectAttributes.addFlashAttribute("checkedIds", List.of());
 		return getReturnUrl();
 	}

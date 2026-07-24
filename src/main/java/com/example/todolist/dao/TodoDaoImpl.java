@@ -24,7 +24,7 @@ public class TodoDaoImpl implements TodoDao {
 	private final EntityManager entityManager;
 	//DBとJavaのデータを出し入れするためのJPA
 	//オブジェクトを作るときにfinalのフィールドを引数に取るコンストラクタを作るため
-	//StringBuilderでJPQLを組み立て、EntityManagerを通してDBに投げる
+	//StringBuilderでJPQLを組み立て、EntityManagerを通して自作のJPQLをSQLに翻訳してDBに投げる
 
 	@Override
 	//親のインターフェースのメソッドを上書きする
@@ -36,6 +36,7 @@ public class TodoDaoImpl implements TodoDao {
 
 		List<Object> params = new ArrayList<>();
 		//検索項目をいくつ入力してくるのか不明だからList用意
+		//プレースホルダーを用意してるから、一旦入力値を保管するリスト
 		int pos = 0;
 		//SQLのプレースホルダーのカウント
 

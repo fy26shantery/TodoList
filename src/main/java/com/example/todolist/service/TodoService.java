@@ -36,6 +36,7 @@ public class TodoService {
 			}
 			if (isAllDoubleSpace) {
 				// messages.properties のキー
+				//titleの項目が～の理由でrejectだと判定
 				result.rejectValue("title", "todo.title.allDoubleSpace");
 				ans = false;
 			}
@@ -89,7 +90,7 @@ public class TodoService {
 			}
 		}
 
-		//両方とも形式エラーがない場合、大小関係をチェックする
+		//過去→未来の順に入力されてるかチェックする
 		if (fromDate != null && toDate != null) {
 			// 開始日が終了日より後の場合
 			if (fromDate.isAfter(toDate)) {
